@@ -1,9 +1,12 @@
 import time
-from subprocess import run
+from subprocess import run, TimeoutExpired
 
 
 def do_work(args):
-    run(args)
+    try:
+        run(args, timeout=4)
+    except TimeoutExpired:
+        print(f"Timeout of process: {args}")
 
 
 if __name__ == "__main__":
