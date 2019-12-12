@@ -1,5 +1,5 @@
 from multiprocessing import Pool
-
+import os
 import time
 from subprocess import run, TimeoutExpired
 
@@ -16,7 +16,10 @@ def do_work(args):
 
 
 if __name__ == "__main__":
-    work_items = list(map(lambda x: ["./gopl.io", f"{x}", f"some_argument_{x}"], list(range(8))))
+    cwd = os.path.dirname(os.path.realpath(__file__))
+    exePath = os.path.join(cwd, "golang.exe")
+
+    work_items = list(map(lambda x: [exePath, f"{x}", f"some_argument_{x}"], list(range(8))))
 
     start_time = time.time()
 
