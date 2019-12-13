@@ -9,7 +9,7 @@ from glob import glob
 def do_work(args):
     debugging = False  # change to True/False to see/not see the pdf2html output/errors
     std = None if debugging else DEVNULL
-    timeout = 3  # in seconds
+    timeout = 6  # in seconds
 
     # pdf_name = args[2].split("\\")[-1]
     pdf_name = args[3].split("\\")[-1]
@@ -61,9 +61,6 @@ def get_unprocessed_files(current_files):
 def save_successfully_processed_files(done_pdfs):
     prev_done_set = load_processed_files()
     new_done_set = prev_done_set | done_pdfs
-    print(prev_done_set)
-    print(done_pdfs)
-    print(new_done_set)
     with open("success.json", "w+") as json_file:
         json.dump(list(new_done_set), json_file)
 
@@ -74,7 +71,7 @@ def create_arguments(inputs):
     for j in range(len(inputs)):
         current_file = pdf_files[j]
         # command_line_argument = [f"{i + 1}/{len(pdf_files)}", pdf_to_html_exe, pdf_file, "--dest-dir", out_directory]
-        arg = [f"{j + 1}/{len(inputs)}", pdf_to_html_exe, f"{j}", current_file]
+        arg = [f"{j + 1}/{len(inputs)}", pdf_to_html_exe, f"{len(pdf_files) - j}", current_file]
         args.append(arg)
     return args
 
