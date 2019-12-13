@@ -1,4 +1,3 @@
-import json
 from multiprocessing import Pool
 import time
 from subprocess import run, TimeoutExpired, CalledProcessError, DEVNULL
@@ -44,7 +43,8 @@ def create_arguments(inputs):
     args = []
     for j in range(len(inputs)):
         current_file = pdf_files[j]
-        arg = [f"{j + 1}/{len(pdf_files)}", pdf_to_html_exe, current_file, "--dest-dir", out_directory]
+        current_file_index = f"{j + 1}/{len(pdf_files)}"
+        arg = [current_file_index, pdf_to_html_exe, current_file, "--dest-dir", out_directory]
         args.append(arg)
     return args
 
@@ -57,8 +57,7 @@ if __name__ == "__main__":
     pdf_to_html_exe = r"C:\Users\T1Ivan\Desktop\GitHub\multiprocessing-python\pdf2htmlEX\pdf2htmlEX.exe"
 
     # Path to the folder with PDF files
-    pdf_files = glob(r"F:\Environmental Baseline Data\Version 3\Data\PDF\*.pdf")
-    # pdf_files = sorted(glob(r"c:\Users\T1Ivan\Desktop\PDF\*.pdf"))[:]
+    pdf_files = sorted(glob(r"F:\Environmental Baseline Data\Version 3\Data\PDF\*.pdf"))[:]
 
     # Path to the output folder where you need HTML files to be stored
     out_directory = r"c:\Users\T1Ivan\Desktop\PDF\out"
