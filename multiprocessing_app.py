@@ -58,7 +58,7 @@ if __name__ == "__main__":
     pdf_to_html_exe = r"F:/Environmental Baseline Data/Version 2/Code/EXE Files/pdf2htmlEX-win32-0.14.6-upx-with-poppler-data/pdf2htmlEX.exe"
 
     # Path to the folder with PDF files
-    pdf_files = sorted(glob(r"F:\Environmental Baseline Data\Version 3\Data\PDF\*.pdf"))[0:48]
+    pdf_files = sorted(glob(r"F:\Environmental Baseline Data\Version 3\Data\PDF\*.pdf"))[:]
 
     # Path to the output folder where you need HTML files to be stored
     out_directory = r"c:\Users\T1Ivan\Desktop\PDF\out"
