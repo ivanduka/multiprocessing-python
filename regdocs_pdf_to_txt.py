@@ -87,10 +87,11 @@ if __name__ == "__main__":
     start_time = time.time()
     id_list = get_ids()[:]
 
-    # Running all the work in multiprocessing mode
+    # Running all the work in a multiprocessing mode
     with Pool(24) as pool:
         results = pool.map(do_work, id_list)
 
+    # Running all the work in a sequential mode
     # results = []
     # for single_id in id_list:
     #     results.append(do_work(single_id))
