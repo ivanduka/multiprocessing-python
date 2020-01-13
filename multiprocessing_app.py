@@ -23,7 +23,7 @@ def do_work(args):
         return False, pdf_name
 
     item_duration = round(time.time() - start)
-    print(f"{pdf_index} finished {pdf_name} in {format(item_duration / 60, '.1f')} minutes.")
+    print(f"{pdf_index} finished {pdf_name} in {item_duration} seconds.")
     return True, pdf_name
 
 
@@ -72,13 +72,13 @@ if __name__ == "__main__":
     print("###########################\n")
 
     # Running all the work in multiprocessing mode
-    with Pool() as pool:
-        results = pool.map(do_work, work_items)
+    # with Pool() as pool:
+    #     results = pool.map(do_work, work_items)
 
     # === [For reference only] the sequential processing way as opposed to multiprocessing ===
-    # results = []
-    # for work_item in work_items:
-    #     results.append(do_work(work_item))
+    results = []
+    for work_item in work_items:
+        results.append(do_work(work_item))
 
     # Sorting the results into two lists with multiprocessing: successfully processed and time outed PDFs
     success_pdfs, timeout_pdfs = parse_results(results)
