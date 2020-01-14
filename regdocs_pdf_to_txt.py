@@ -8,6 +8,10 @@ import pandas as pd
 import re
 import requests
 from pathlib import Path
+from subprocess import run, TimeoutExpired, CalledProcessError
+import tempfile
+import shutil
+import get_latest_filings  # MAC
 
 
 def do_work(file_id):
@@ -16,13 +20,14 @@ def do_work(file_id):
     pdf_content = download_file(file_id)
     if not pdf_content:
         item_duration = round(time.time() - start)
+        print(f'{file_id} failed download')
         return {
             "result": False,
             "file_id": file_id,
             "duration": item_duration
         }
 
-    text_content = convert_pdf_to_text(pdf_content)
+    text_content = convert_pdf_to_json(file_id, pdf_content)
     if not text_content:
         item_duration = round(time.time() - start)
         return {
@@ -31,10 +36,9 @@ def do_work(file_id):
             "duration": item_duration
         }
 
-    processed_text = process_text(text_content)
-    save_file(file_id, processed_text)
     item_duration = round(time.time() - start)
     print(True, file_id, item_duration, "seconds")
+
     return {
         "result": True,
         "file_id": file_id,
@@ -54,23 +58,32 @@ def download_file(file_id):
             return False
 
 
-def process_text(input_text):
-    return input_text
+def convert_pdf_to_json(file_id, pdf):
+    timeout = 60 * 60  # in seconds
 
+    text_files_folder = '/Users/ivand/Downloads/temp/'  # for MAC
+    # text_files_folder = r'C:\Users\T1Ivan\Desktop\txt'
 
-def save_file(file_id, text):
-    text_files_folder = r'C:\Users\T1Ivan\Desktop\txt'
-    full_path = Path(text_files_folder).joinpath(f'{file_id}.txt')
-    with open(full_path, "wb") as file:
-        file.write(text.encode('utf-8', 'ignore'))
+    with tempfile.NamedTemporaryFile(suffix='.pdf') as tf:
+        tf.write(pdf)
+        tf.flush()
 
+        args = ['java', '-jar', './buildvu-html-trial.jar', tf.name, text_files_folder]
 
-def convert_pdf_to_text(pdf):
-    parsed = parser.from_buffer(pdf)
-    content = parsed["content"]
-    if not content:
-        return False
-    return content
+        try:
+            run(args, timeout=timeout)
+        except (TimeoutExpired, CalledProcessError):
+            print(f"{file_id} errored")
+            return False, file_id
+
+        temp_file = Path(tf.name)
+        base_dir = Path(text_files_folder).joinpath(temp_file.stem)
+        source_json = base_dir.joinpath("search.json")
+        target_json = base_dir.parent.joinpath(str(file_id) + ".json")
+        os.replace(source_json, target_json)
+        shutil.rmtree(base_dir)
+
+    return True, file_id
 
 
 def get_ids():
@@ -84,11 +97,16 @@ def get_ids():
 
 
 if __name__ == "__main__":
+    id_list = get_latest_filings.get_latest_ids()  # for MAC
+    # id_list = [3899019]
+    # id_list = get_ids()[:]
+
+    print(f"Got {len(id_list)} items to process")
+
     start_time = time.time()
-    id_list = get_ids()[:]
 
     # Running all the work in a multiprocessing mode
-    with Pool(24) as pool:
+    with Pool() as pool:
         results = pool.map(do_work, id_list)
 
     # Running all the work in a sequential mode
