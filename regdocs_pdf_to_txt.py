@@ -7,6 +7,7 @@ import requests
 from pathlib import Path
 from subprocess import run, TimeoutExpired, CalledProcessError
 import shutil
+import json
 
 
 def do_work(file_id):
@@ -14,30 +15,18 @@ def do_work(file_id):
 
     pdf_content = download_file(file_id)
     if not pdf_content:
-        item_duration = round(time.time() - start)
         print(f'{file_id} failed download')
-        return {
-            "result": False,
-            "file_id": file_id,
-            "duration": item_duration
-        }
+        return {file_id: {"result": "Download failed"}}
 
-    text_content = convert_pdf_to_json(file_id, pdf_content)
-    if not text_content:
-        item_duration = round(time.time() - start)
-        return {
-            "result": False,
-            "file_id": file_id,
-            "duration": item_duration
-        }
+    metadata = convert_pdf_to_json(file_id, pdf_content)
+    if not metadata:
+        return {file_id: {"result": "Processing failed"}}
 
     item_duration = round(time.time() - start)
-    print(True, file_id, item_duration, "seconds")
+    print("Done", file_id, "in", item_duration, "seconds")
 
     return {
-        "result": True,
-        "file_id": file_id,
-        "duration": item_duration
+        file_id: {"result": "Success", "metadata": metadata}
     }
 
 
@@ -45,10 +34,8 @@ def download_file(file_id):
     url = f'https://apps.cer-rec.gc.ca/REGDOCS/File/Download/{file_id}'
     with requests.Session() as session:
         r = session.get(url)
-        if r.status_code != 200:
-            print(f"Got {r.status_code} for {file_id}")
         if r.headers["Content-Type"] == 'application/pdf':
-            print(f"Got PDF for {file_id}")
+            print(f"Downloaded PDF for {file_id}")
             return r.content
         else:
             return False
@@ -58,7 +45,9 @@ def convert_pdf_to_json(file_id, pdf):
     timeout = 60 * 60  # in seconds
     jar_file_path = Path(__file__).parent.joinpath("buildvu-html-trial.jar")
 
+    # Path to results folder:
     text_files_folder = Path(r'C:\Users\T1Ivan\Desktop\txt').joinpath("")
+
     temp_file_path = text_files_folder.joinpath(f"{file_id}.pdf")
     with open(temp_file_path, "wb") as tf:
         tf.write(pdf)
@@ -69,8 +58,8 @@ def convert_pdf_to_json(file_id, pdf):
     try:
         run(args, timeout=timeout)
     except (TimeoutExpired, CalledProcessError):
-        print(f"{file_id} errored")
-        return False, file_id
+        print(f"File with ID {file_id} could not be processed")
+        return None
 
     base_dir = text_files_folder.joinpath(temp_file_path.stem)
     source_json = base_dir.joinpath("search.json")
@@ -79,7 +68,7 @@ def convert_pdf_to_json(file_id, pdf):
     shutil.rmtree(base_dir)
     os.remove(temp_file_path)
 
-    return True, file_id
+    return {"example": "whatever"}
 
 
 def get_ids():
@@ -109,4 +98,5 @@ if __name__ == "__main__":
     #     results.append(do_work(single_id))
 
     duration = round(time.time() - start_time)
+    print(json.dumps(results, indent=4))
     print(f"Done in {duration} seconds")
