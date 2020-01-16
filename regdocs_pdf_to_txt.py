@@ -1,17 +1,12 @@
 import os
 from multiprocessing import Pool
 import time
-import tika
-from tika import parser  # need Java update
 from sqlalchemy import create_engine
 import pandas as pd
-import re
 import requests
 from pathlib import Path
 from subprocess import run, TimeoutExpired, CalledProcessError
-import tempfile
 import shutil
-import get_latest_filings  # MAC
 
 
 def do_work(file_id):
@@ -51,8 +46,9 @@ def download_file(file_id):
     with requests.Session() as session:
         r = session.get(url)
         if r.status_code != 200:
-            print("Got not 200:", r.status_code)
+            print(f"Got {r.status_code} for {file_id}")
         if r.headers["Content-Type"] == 'application/pdf':
+            print(f"Got PDF for {file_id}")
             return r.content
         else:
             return False
@@ -60,28 +56,28 @@ def download_file(file_id):
 
 def convert_pdf_to_json(file_id, pdf):
     timeout = 60 * 60  # in seconds
+    jar_file_path = Path(__file__).parent.joinpath("buildvu-html-trial.jar")
 
-    text_files_folder = '/Users/ivand/Downloads/temp/'  # for MAC
-    # text_files_folder = r'C:\Users\T1Ivan\Desktop\txt'
-
-    with tempfile.NamedTemporaryFile(suffix='.pdf') as tf:
+    text_files_folder = Path(r'C:\Users\T1Ivan\Desktop\txt').joinpath("")
+    temp_file_path = text_files_folder.joinpath(f"{file_id}.pdf")
+    with open(temp_file_path, "wb") as tf:
         tf.write(pdf)
-        tf.flush()
 
-        args = ['java', '-jar', './buildvu-html-trial.jar', tf.name, text_files_folder]
+    args = ['java', '-jar', f'{jar_file_path}',
+            f'{temp_file_path}', f'{text_files_folder}', ]
 
-        try:
-            run(args, timeout=timeout)
-        except (TimeoutExpired, CalledProcessError):
-            print(f"{file_id} errored")
-            return False, file_id
+    try:
+        run(args, timeout=timeout)
+    except (TimeoutExpired, CalledProcessError):
+        print(f"{file_id} errored")
+        return False, file_id
 
-        temp_file = Path(tf.name)
-        base_dir = Path(text_files_folder).joinpath(temp_file.stem)
-        source_json = base_dir.joinpath("search.json")
-        target_json = base_dir.parent.joinpath(str(file_id) + ".json")
-        os.replace(source_json, target_json)
-        shutil.rmtree(base_dir)
+    base_dir = text_files_folder.joinpath(temp_file_path.stem)
+    source_json = base_dir.joinpath("search.json")
+    target_json = base_dir.parent.joinpath(str(file_id) + ".json")
+    os.replace(source_json, target_json)
+    shutil.rmtree(base_dir)
+    os.remove(temp_file_path)
 
     return True, file_id
 
@@ -97,9 +93,7 @@ def get_ids():
 
 
 if __name__ == "__main__":
-    id_list = get_latest_filings.get_latest_ids()  # for MAC
-    # id_list = [3899019]
-    # id_list = get_ids()[:]
+    id_list = get_ids()[1000:1002]
 
     print(f"Got {len(id_list)} items to process")
 
