@@ -132,3 +132,4 @@ dmypy.json
 .vscode
 /venv2
 test.py
+report.json

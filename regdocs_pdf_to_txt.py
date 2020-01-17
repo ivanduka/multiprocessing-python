@@ -8,6 +8,7 @@ from pathlib import Path
 from subprocess import run, TimeoutExpired, CalledProcessError
 import shutil
 import json
+from PyPDF2 import PdfFileReader
 
 
 def do_work(file_id):
@@ -38,7 +39,7 @@ def download_file(file_id):
             print(f"Downloaded PDF for {file_id}")
             return r.content
         else:
-            return False
+            return None
 
 
 def convert_pdf_to_json(file_id, pdf):
@@ -49,8 +50,15 @@ def convert_pdf_to_json(file_id, pdf):
     text_files_folder = Path(r'C:\Users\T1Ivan\Desktop\txt').joinpath("")
 
     temp_file_path = text_files_folder.joinpath(f"{file_id}.pdf")
-    with open(temp_file_path, "wb") as tf:
+    with open(temp_file_path, "x+b") as tf:
         tf.write(pdf)
+        tf.flush()
+        read_pdf = PdfFileReader(tf)
+        document_info = read_pdf.getDocumentInfo()
+        document_pages = read_pdf.getNumPages()
+        document_xmp_metadata = read_pdf.getXmpMetadata()
+
+    document_size = os.path.getsize(temp_file_path)
 
     args = ['java', '-jar', f'{jar_file_path}',
             f'{temp_file_path}', f'{text_files_folder}', ]
@@ -68,7 +76,12 @@ def convert_pdf_to_json(file_id, pdf):
     shutil.rmtree(base_dir)
     os.remove(temp_file_path)
 
-    return {"example": "whatever"}
+    return {
+        "document_info": document_info,
+        "document_pages": document_pages,
+        "document_xmp_metadata": document_xmp_metadata,
+        "document_size": document_size,
+    }
 
 
 def get_ids():
@@ -97,6 +110,9 @@ if __name__ == "__main__":
     # for single_id in id_list:
     #     results.append(do_work(single_id))
 
+    with open('report.json', 'w') as f:
+        json.dump(results, f, indent=2)
+
     duration = round(time.time() - start_time)
-    print(json.dumps(results, indent=4))
+    print(json.dumps(results, indent=2))
     print(f"Done in {duration} seconds")
