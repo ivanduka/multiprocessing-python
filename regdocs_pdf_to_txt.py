@@ -24,7 +24,7 @@ def do_work(file_id):
         return {file_id: {"result": "Processing failed"}}
 
     item_duration = round(time.time() - start)
-    print("Done", file_id, "in", item_duration, "seconds")
+    print("Processed", file_id, "in", item_duration, "seconds")
 
     return {
         file_id: {"result": "Success", "metadata": metadata}
@@ -53,14 +53,21 @@ def convert_pdf_to_json(file_id, pdf):
     with open(temp_file_path, "x+b") as tf:
         tf.write(pdf)
         tf.flush()
-        read_pdf = PdfFileReader(tf)
-        document_info = read_pdf.getDocumentInfo()
-        document_pages = read_pdf.getNumPages()
-        document_xmp_metadata = read_pdf.getXmpMetadata()
+
+        try:
+            read_pdf = PdfFileReader(tf)
+            document_info = read_pdf.getDocumentInfo()
+            document_pages = read_pdf.getNumPages()
+            document_xmp_metadata = read_pdf.getXmpMetadata()
+        except Exception:
+            read_pdf = None
+            document_info = None
+            document_pages = None
+            document_xmp_metadata = None
 
     document_size = os.path.getsize(temp_file_path)
 
-    args = ['java', '-jar', f'{jar_file_path}',
+    args = ['java', "-DsocksProxyHost=socks.example.com", "-Xmx768M", '-jar', f'{jar_file_path}',
             f'{temp_file_path}', f'{text_files_folder}', ]
 
     try:
@@ -95,7 +102,7 @@ def get_ids():
 
 
 if __name__ == "__main__":
-    id_list = get_ids()[1000:1002]
+    id_list = get_ids()[:]
 
     print(f"Got {len(id_list)} items to process")
 
