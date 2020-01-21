@@ -76,7 +76,7 @@ def convert_pdf_to_json(file_id, pdf):
 
     document_size = os.path.getsize(temp_file_path)
 
-    args = ['java', "-DsocksProxyHost=socks.example.com", "-Xmx10000M", "-d64", '-jar', f"{jar_file_path}",
+    args = ['java', "-DsocksProxyHost=socks.example.com", "-Xmx2000M", "-d64", '-jar', f"{jar_file_path}",
             f'{temp_file_path}', f'{text_files_folder}', ]
 
     base_dir = text_files_folder.joinpath(temp_file_path.stem)
@@ -160,16 +160,16 @@ if __name__ == "__main__":
     start_time = time.time()
 
     # Running all the work in a multiprocessing mode
-    with Pool() as pool:
-        results = pool.map(do_work, ids_for_processing)
+    # with Pool() as pool:
+    #     results = pool.map(do_work, ids_for_processing)
 
     # Running all the work in a sequential mode
-    # results = []
-    # for single_id in ids_for_processing:
-    #     results.append(do_work(single_id))
+    results = []
+    for single_id in ids_for_processing:
+        results.append(do_work(single_id))
 
-    with open('report.json', 'w') as f:
-        json.dump(results, f, indent=2)
+    # with open('report.json', 'w') as f:
+    #     json.dump(results, f, indent=2)
 
     duration = round(time.time() - start_time)
     print(f"Done in {duration} seconds")
