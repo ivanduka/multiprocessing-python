@@ -160,13 +160,13 @@ if __name__ == "__main__":
     start_time = time.time()
 
     # Running all the work in a multiprocessing mode
-    # with Pool() as pool:
-    #     results = pool.map(do_work, ids_for_processing)
+    with Pool() as pool:
+        results = pool.map(do_work, ids_for_processing)
 
     # Running all the work in a sequential mode
-    results = []
-    for single_id in ids_for_processing:
-        results.append(do_work(single_id))
+    # results = []
+    # for single_id in ids_for_processing:
+    #     results.append(do_work(single_id))
 
     # with open('report.json', 'w') as f:
     #     json.dump(results, f, indent=2)
