@@ -26,7 +26,7 @@ def process_table(pdf):
 
 
 def process_handler():
-    pdf_files = sorted(glob(f"{source_pdf_dir}\\*.pdf"))[:]
+    pdf_files = sorted(glob(f"{source_pdf_dir}\\*.pdf"))[:2]
     pdf_paths = []
     for pdf_file in pdf_files:
         pdf_paths.append(Path(pdf_file))
