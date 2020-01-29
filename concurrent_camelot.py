@@ -36,7 +36,7 @@ def process_handler():
     start_time = time.time()
 
     # Sequential process
-    results = []
+    # results = []
     # for pdf in pdf_paths:
     #     results.append(process_table(pdf))
 
