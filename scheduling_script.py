@@ -55,7 +55,7 @@ def running_external_app():
 def send_email(text):
     message = Mail(
         from_email='justin@pmoffice.ca',
-        to_emails=["ivan.duka@cer-rec.gc.ca", "Margaret.Skwara@cer-rec.gc.ca", "Janna.Rodioukova@cer-rec.gc.ca"],
+        to_emails=[os.getenv("EMAIL_MY"), os.getenv("EMAIL_MARGARET"), os.getenv("EMAIL_JANNA")],
         subject='Testing the automatically scheduled Python script ;)',
         plain_text_content=text)
     try:
