@@ -7,7 +7,7 @@ import camelot
 from multiprocessing import Pool
 
 source_pdf_dir = Path(r'F:\Environmental Baseline Data\01 ESAs as PDF\ESA Documents')
-results_dir = Path(r'F:\Environmental Baseline Data\text_from_all_files_in_REGDOCS\PDFs\results\\')
+results_dir = Path(r'F:\Environmental Baseline Data\text_from_all_files_in_REGDOCS\PDFs\results')
 
 
 def process_table(pdf):
@@ -22,14 +22,14 @@ def process_table(pdf):
             print(f'Process {os.getpid()} Pickle file loaded: {pdf}')
         return True
     except Exception as e:
-        return e
+        return {
+            pdf: pdf,
+            error: e
+        }
 
 
 def process_handler():
-    pdf_files = sorted(glob(f"{source_pdf_dir}\\*.pdf"))[:2]
-    pdf_paths = []
-    for pdf_file in pdf_files:
-        pdf_paths.append(Path(pdf_file))
+    pdf_paths = [Path(pdf) for pdf in sorted(glob(f"{source_pdf_dir}\\*.pdf"))[:12]]
 
     print(f"Working on {len(pdf_paths)}")
 
