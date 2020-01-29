@@ -23,8 +23,8 @@ def process_table(pdf):
         return True
     except Exception as e:
         return {
-            pdf: pdf,
-            error: e
+            "pdf": pdf,
+            "error": e
         }
 
 
