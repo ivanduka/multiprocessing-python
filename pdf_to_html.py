@@ -12,7 +12,7 @@ html_files = Path(r"F:\Environmental Baseline Data\Web\v01\html")
 
 
 def convert_pdf(file_id):
-    timeout = 1 * 60 * 60 # in seconds
+    timeout = 1 * 60 * 60  # in seconds
     pdf_path = pdf_files.joinpath(str(file_id)).with_suffix(".pdf")
     arguments = ["java", "-jar", "./buildvu-html-trial.jar", str(pdf_path), str(html_files)]
 
@@ -61,7 +61,6 @@ if __name__ == "__main__":
     print("Commencing the conversion:")
     # for pdf_id in ids:
     #     convert_pdf(pdf_id)
-    with multiprocessing.Pool(10) as pool:
-        pool.map(convert_pdf, ids[0:20])
+    with multiprocessing.Pool(12) as pool:
+        pool.map(convert_pdf, ids)
     print(f"Converted all ids")
-
