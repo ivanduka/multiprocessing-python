@@ -59,9 +59,9 @@ if __name__ == "__main__":
     print(f"Downloaded {len(ids_to_download)} IDs")
 
     print("Commencing the conversion:")
-    for pdf_id in ids:
-        convert_pdf(pdf_id)
-    # with multiprocessing.Pool(10) as pool:
-    #     pool.map(convert_pdf, ids[0:20])
+    # for pdf_id in ids:
+    #     convert_pdf(pdf_id)
+    with multiprocessing.Pool(10) as pool:
+        pool.map(convert_pdf, ids[0:20])
     print(f"Converted all ids")
 
