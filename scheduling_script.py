@@ -77,10 +77,13 @@ def save_to_file(text):
 
 
 def main():
-    simple_printing()
-    get_something_from_db()
-    get_something_from_f_drive()
-    running_external_app()
+    try:
+        simple_printing()
+        get_something_from_db()
+        get_something_from_f_drive()
+        running_external_app()
+    except Exception as e:
+        print(e)
 
 
 if __name__ == "__main__":
