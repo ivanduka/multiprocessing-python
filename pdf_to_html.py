@@ -7,14 +7,14 @@ from subprocess import run, TimeoutExpired, CalledProcessError
 
 # Variables for running this app
 pdf_ids = Path(r"F:\Environmental Baseline Data\Web\v01\ESA Figures.xlsx")
-pdf_files = Path(r"F:\Environmental Baseline Data\Web\v01\pdfs")
-html_files = Path(r"F:\Environmental Baseline Data\Web\v01\html")
+pdf_files = Path(r"F:\Environmental Baseline Data\Web\v02\pdfs")
+html_files = Path(r"F:\Environmental Baseline Data\Web\v02\html")
 
 
 def convert_pdf(file_id):
     timeout = 1 * 60 * 60  # in seconds
     pdf_path = pdf_files.joinpath(str(file_id)).with_suffix(".pdf")
-    arguments = ['java', "-Xmx24000M", "-d64", '-jar',
+    arguments = ['java', "-Xmx10000M", "-d64", '-jar',
                  "./buildvu-html-trial.jar", str(pdf_path), str(html_files)]
 
     try:
@@ -49,7 +49,8 @@ def download_id(file_id):
 
 
 if __name__ == "__main__":
-    ids = get_ids()
+    # ids = get_ids()
+    ids = [2392990]
     print(f"Need to process {len(ids)} ids")
 
     ids_to_download = check_existing_pdfs(ids)
@@ -64,6 +65,6 @@ if __name__ == "__main__":
     print("Commencing the conversion:")
     # for pdf_id in ids:
     #     convert_pdf(pdf_id)
-    with multiprocessing.Pool(6) as pool:
+    with multiprocessing.Pool(12) as pool:
         pool.map(convert_pdf, ids)
     print(f"Converted all ids")
