@@ -7,8 +7,8 @@ from subprocess import run, TimeoutExpired, CalledProcessError
 
 # Variables for running this app
 pdf_ids = Path(r"F:\Environmental Baseline Data\Web\v01\ESA Figures.xlsx")
-pdf_files = Path(r"F:\Environmental Baseline Data\Web\v02\pdfs")
-html_files = Path(r"F:\Environmental Baseline Data\Web\v02\html")
+pdf_files = Path(r"F:\Environmental Baseline Data\Web\v01\pdfs")
+html_files = Path(r"F:\Environmental Baseline Data\Web\v01\html")
 
 
 def convert_pdf(file_id):
@@ -49,8 +49,7 @@ def download_id(file_id):
 
 
 if __name__ == "__main__":
-    # ids = get_ids()
-    ids = [2392990]
+    ids = get_ids()
     print(f"Need to process {len(ids)} ids")
 
     ids_to_download = check_existing_pdfs(ids)
