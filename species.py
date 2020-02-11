@@ -51,7 +51,6 @@ def remove_tags(prev_value):
     return prev_value.replace("<i>", "").replace("</i>", "")
 
 
-# ['1', '11', '12', '13', '2', '3', '4', '5', '6', '7', '8', '9']
 def replace_ranges(prev_value, options_dict):
     result = []
     for numberString in prev_value:
