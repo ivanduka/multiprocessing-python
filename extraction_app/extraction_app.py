@@ -87,8 +87,8 @@ def extract_image():
 
 def extract_csv_and_html():
     def extract(file_path, page, areas, flavor):
-        input = PdfFileReader(file_path.open('rb'))
-        size = input.getPage(page).mediaBox
+        input_file = PdfFileReader(file_path.open('rb'))
+        size = input_file.getPage(page).mediaBox
         print(size.getWidth(), size.getHeight())
         tables = camelot.read_pdf(str(file_path), flavor=flavor, flag_size=True, table_areas=[
             areas], pages=str(page))
