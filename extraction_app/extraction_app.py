@@ -7,10 +7,19 @@ import pandas as pd
 from PyPDF2 import PdfFileReader, PdfFileWriter
 from pathlib import Path
 from glob import glob
+from shutil import rmtree
 
-pdf_files = [Path(file) for file in glob(str(Path("./pdf")) + "/*.pdf")]
+pdf_files = list(Path("./pdf").glob("*.pdf"))
 html_folder_path = Path("./html")
 converter_path = Path("./buildvu-html-trial.jar")
+
+
+def clean_folder(folder):
+    for path in Path(folder).glob("**/*"):
+        if path.is_file():
+            path.unlink()
+        elif path.is_dir():
+            rmtree(path)
 
 
 def change_pdf_title(pdf_file_path):
@@ -31,7 +40,7 @@ def change_pdf_title(pdf_file_path):
             else:
                 print("Title is already OK for", pdf_file_path.stem)
     except Exception as e:
-        print(f"==== Error changing title in: {pdf_file_path}======")
+        print(f"==== Error changing title in: {pdf_file_path.stem}======")
         print(e)
         print(f"======================================")
 
@@ -46,20 +55,22 @@ def change_pdf_titles():
 
 def convert_pdf(pdf_file_path):
     timeout = 3600  # seconds
-    arguments = ['java', "-Xmx10000M", "-d64", '-jar', str(converter_path.resolve()), str(pdf_file_path.resolve()),
+    arguments = ['java', '-jar', str(converter_path.resolve()), str(pdf_file_path.resolve()),
                  str(html_folder_path.resolve())]
 
     try:
         run(arguments, timeout=timeout)
     except (TimeoutExpired, CalledProcessError) as e:
-        print(f"==== Error converting {pdf_file_path} to HTML ======")
+        print(f"==== Error converting ID {pdf_file_path.stem} to HTML ======")
         print(e)
         print(f"======================================")
         return
-    print(f"Converted ID {pdf_file_path}")
+    print(f"Converted ID {pdf_file_path.stem}")
 
 
 def convert_pdfs():
+    print("Cleaning up the folder", html_folder_path)
+    clean_folder(html_folder_path)
     print(f"Attempting to convert {len(pdf_files)} PDFs to HTML")
     for pdf_file in pdf_files:
         convert_pdf(pdf_file)
@@ -97,8 +108,6 @@ def extract_csv_and_html():
 
 
 if __name__ == "__main__":
-    change_pdf_titles()
-    # print(list(Path("./pdf").glob("*.pdf")))
-    convert_pdfs()
-    # print(str(pdf_files[0].resolve()))
-    # print(str(html_folder_path.resolve()))
+    # change_pdf_titles()
+    # convert_pdfs()
+    pass
