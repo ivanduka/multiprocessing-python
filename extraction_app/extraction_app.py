@@ -2,11 +2,9 @@ from subprocess import run, TimeoutExpired, CalledProcessError
 
 import camelot
 import matplotlib.pyplot as plt
-from pathlib import Path
 import pandas as pd
 from PyPDF2 import PdfFileReader, PdfFileWriter
 from pathlib import Path
-from glob import glob
 from shutil import rmtree
 
 pdf_files = list(Path("./pdf").glob("*.pdf"))
