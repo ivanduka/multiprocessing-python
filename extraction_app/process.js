@@ -5,7 +5,6 @@ document.body.classList.remove("light-theme");
 document.body.classList.add("dark-theme");
 const ids = ["viewBtn", "btnZoomIn", "btnZoomOut", "btnSelect", "btnMove", "btnFullScreen", "btnThemeToggle", "zoomBtn"];
 ids.forEach(id => {
-    console.log(id);
     const elem = document.getElementById(id);
     elem.parentNode.removeChild(elem);
 })
