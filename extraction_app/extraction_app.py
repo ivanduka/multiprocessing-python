@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import PyPDF2
 from pathlib import Path
 from shutil import rmtree
+from bs4 import BeautifulSoup
 
 pdf_files_folder = Path("./pdf")
 pdf_files = list(pdf_files_folder.glob("*.pdf"))
@@ -12,6 +13,7 @@ html_folder_path = Path("./html")
 index_files_paths = list(html_folder_path.rglob("**/index.html"))
 results_folder_path = Path("./results")
 converter_path = Path("./buildvu-html-trial.jar")
+app_path = "../../process.js"
 
 
 def clean_folder(folder):
@@ -77,8 +79,25 @@ def convert_pdfs():
     print("Done converting PDFs")
 
 
-def inject_app():
-    pass
+def inject_app(input_file):
+    with input_file.open() as html_file:
+        soup = BeautifulSoup(html_file, "html.parser")
+        if not soup.findAll('script', src=app_path):
+            print(f"Adding script to {html_file}")
+            script = soup.new_tag('script')
+            script['src'] = app_path
+            soup.body.append(script)
+            with input_file.open("w", encoding='utf-8') as file:
+                file.write(str(soup))
+        else:
+            print(f"{input_file} is all good!")
+
+
+def inject_apps():
+    print(f"Attempting to inject the app to {len(pdf_files)} HTML files")
+    for index_file in index_files_paths:
+        inject_app(index_file)
+    print("Done injecting apps")
 
 
 def extract_image():
@@ -117,5 +136,6 @@ def get_data_from_db():
 if __name__ == "__main__":
     # change_pdf_titles()
     # convert_pdfs()
-    data = get_data_from_db()
-    extract_csv_and_html(data)
+    # data = get_data_from_db()
+    # extract_csv_and_html(data)
+    inject_apps()
