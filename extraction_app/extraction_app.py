@@ -2,13 +2,15 @@ from subprocess import run, TimeoutExpired, CalledProcessError
 
 import camelot
 import matplotlib.pyplot as plt
-import pandas as pd
-from PyPDF2 import PdfFileReader, PdfFileWriter
+import PyPDF2
 from pathlib import Path
 from shutil import rmtree
 
-pdf_files = list(Path("./pdf").glob("*.pdf"))
+pdf_files_folder = Path("./pdf")
+pdf_files = list(pdf_files_folder.glob("*.pdf"))
 html_folder_path = Path("./html")
+index_files_paths = list(html_folder_path.rglob("**/index.html"))
+results_folder_path = Path("./results")
 converter_path = Path("./buildvu-html-trial.jar")
 
 
@@ -23,11 +25,11 @@ def clean_folder(folder):
 def change_pdf_title(pdf_file_path):
     try:
         with pdf_file_path.open('rb') as file_in:
-            reader = PdfFileReader(file_in)
+            reader = PyPDF2.PdfFileReader(file_in)
             metadata = reader.getDocumentInfo()
             if metadata["/Title"] != pdf_file_path.stem:
                 print("Changing file:", pdf_file_path.stem)
-                writer = PdfFileWriter()
+                writer = PyPDF2.PdfFileWriter()
                 writer.appendPagesFromReader(reader)
                 writer.addMetadata(metadata)
                 writer.addMetadata({
@@ -83,29 +85,38 @@ def extract_image():
     pass
 
 
-def extract_csv_and_html():
-    def extract(file_path, page, areas, flavor):
-        input_file = PdfFileReader(file_path.open('rb'))
-        size = input_file.getPage(page).mediaBox
-        print(size.getWidth(), size.getHeight())
-        tables = camelot.read_pdf(str(file_path), flavor=flavor, flag_size=True, table_areas=[
-            areas], pages=str(page))
-        tables[0].to_csv(file_path.stem + '.csv', index=False, header=False)
-        tables[0].to_html(file_path.stem + '.html', index=False, header=False)
-        print(tables[0].df)
-        camelot.plot(tables[0], kind='contour')
-        # plt.show()
+def extract(pdf_file_path, page, area, flavor):
+    input_file = PyPDF2.PdfFileReader(pdf_file_path.open('rb'))
+    size = input_file.getPage(page).mediaBox
+    print(size.getWidth(), size.getHeight())
+    tables = camelot.read_pdf(str(pdf_file_path), flavor=flavor, flag_size=True, table_areas=[area], pages=str(page))
+    # tables[0].to_csv(pdf_file_path.stem + '.csv', index=False, header=False)
+    # tables[0].to_html(pdf_file_path.stem + '.html', index=False, header=False)
+    camelot.plot(tables[0], kind='contour')
+    plt.show()
 
-    f1 = "B1-10_-_01_1313340047_TCPL_CCP_ESA_FINAL_Sec1-4_-_A3V4K8.pdf"
-    extract(Path().joinpath("pdf", f1),
-            29, '54,605,564,69', 'stream')
 
-    f2 = "A78970-2_Supplemental_ESA_-_Part_1_of_3_-_A5E4Z2.pdf"
-    extract(Path().joinpath("pdf", f2),
-            7, '71,419,541,124', "stream")
+def extract_csv_and_html(inputs):
+    print("Cleaning up the folder", results_folder_path)
+    clean_folder(results_folder_path)
+    print(f"Attempting to extract from {len(pdf_files)} IDs")
+    for unit in inputs:
+        extract(pdf_files_folder.joinpath(f'{unit["id"]}.pdf'), unit["page"], unit["area"], "stream")
+    print("Done extracting")
+
+
+def get_data_from_db():
+    from_db = [
+        [2445104, 29, "54,605,564,69"],
+        [3024953, 7, "71,419,541,124"]
+    ]
+
+    return [{"id": item[0], "page": item[1], "area": item[2]} for item in from_db]
 
 
 if __name__ == "__main__":
     # change_pdf_titles()
     # convert_pdfs()
-    pass
+    data = get_data_from_db()
+    print(data)
+    extract_csv_and_html(data)
