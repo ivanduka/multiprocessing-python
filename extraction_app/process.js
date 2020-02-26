@@ -24,7 +24,6 @@ for (let i = 1; i <= totalPagesInPDF; i++) {
 }
 
 const main = (pX, pageX, fileId, page) => {
-    console.log(`File: ${fileId}, page: ${page}`);
     const canvasElement = document.createElement("canvas");
     pageX.appendChild(canvasElement);
     const ctx = canvasElement.getContext("2d");
@@ -63,9 +62,8 @@ const main = (pX, pageX, fileId, page) => {
     pageX.addEventListener("mouseup", () => {
         mouseIsPressed = false;
 
-        console.log("======================");
-        console.log(`Page size: ${pageWidth} by ${pageHeight}`);
-        console.log(`${lastMouseX}x${lastMouseY} to ${newMouseX}x${newMouseY}`);
+        console.log(`File ${fileId}, Page ${page}, PageWidth: ${pageWidth}, PageHeight: ${pageHeight},` +
+            ` x1: ${lastMouseX}, y1: ${pageHeight - lastMouseY}, x2: ${newMouseX}, y2: ${pageHeight - newMouseY}`);
     });
 
     pageX.addEventListener("mousemove", e => {
