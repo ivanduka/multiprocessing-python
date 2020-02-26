@@ -85,13 +85,13 @@ def extract_image():
     pass
 
 
-def extract(pdf_file_path, page, area, flavor):
-    input_file = PyPDF2.PdfFileReader(pdf_file_path.open('rb'))
-    size = input_file.getPage(page).mediaBox
-    print(size.getWidth(), size.getHeight())
+def extract(pdf_file_path, page, area, flavor, uuid):
+    # input_file = PyPDF2.PdfFileReader(pdf_file_path.open('rb'))
+    # size = input_file.getPage(page).mediaBox
+    # print(size.getWidth(), size.getHeight())
     tables = camelot.read_pdf(str(pdf_file_path), flavor=flavor, flag_size=True, table_areas=[area], pages=str(page))
-    # tables[0].to_csv(pdf_file_path.stem + '.csv', index=False, header=False)
-    # tables[0].to_html(pdf_file_path.stem + '.html', index=False, header=False)
+    tables[0].to_csv(results_folder_path.joinpath(str(uuid) + '.csv'), index=False, header=False)
+    tables[0].to_html(results_folder_path.joinpath(str(uuid) + '.html'), index=False, header=False)
     camelot.plot(tables[0], kind='contour')
     plt.show()
 
@@ -101,22 +101,21 @@ def extract_csv_and_html(inputs):
     clean_folder(results_folder_path)
     print(f"Attempting to extract from {len(pdf_files)} IDs")
     for unit in inputs:
-        extract(pdf_files_folder.joinpath(f'{unit["id"]}.pdf'), unit["page"], unit["area"], "stream")
+        extract(pdf_files_folder.joinpath(f'{unit["id"]}.pdf'), unit["page"], unit["area"], "stream", unit["uuid"])
     print("Done extracting")
 
 
 def get_data_from_db():
     from_db = [
-        [2445104, 29, "54,605,564,69"],
-        [3024953, 7, "71,419,541,124"]
+        [2445104, 29, "54,605,564,69", 23492374927349723947],
+        [3024953, 7, "71,419,541,124", 12339457394572093745]
     ]
 
-    return [{"id": item[0], "page": item[1], "area": item[2]} for item in from_db]
+    return [{"id": item[0], "page": item[1], "area": item[2], "uuid": item[3]} for item in from_db]
 
 
 if __name__ == "__main__":
     # change_pdf_titles()
     # convert_pdfs()
     data = get_data_from_db()
-    print(data)
     extract_csv_and_html(data)
