@@ -1,13 +1,13 @@
 const totalPagesInPDF = IDRViewer.config.pagecount;
-IDRViewer.setLayout("presentation");
-IDRViewer.setZoom("fitpage");
+// IDRViewer.setLayout("presentation");
+// IDRViewer.setZoom("fitpage");
 document.body.classList.remove("light-theme");
 document.body.classList.add("dark-theme");
-const ids = ["viewBtn", "btnZoomIn", "btnZoomOut", "btnSelect", "btnMove", "btnFullScreen", "btnThemeToggle", "zoomBtn"];
-ids.forEach(id => {
-    const elem = document.getElementById(id);
-    elem.parentNode.removeChild(elem);
-})
+// const ids = ["viewBtn", "btnZoomIn", "btnZoomOut", "btnSelect", "btnMove", "btnFullScreen", "btnThemeToggle", "zoomBtn"];
+// ids.forEach(id => {
+//     const elem = document.getElementById(id);
+//     elem.parentNode.removeChild(elem);
+// })
 
 for (let i = 1; i <= totalPagesInPDF; i++) {
     const pageX = document.querySelector("#page" + i);
@@ -30,8 +30,6 @@ for (let i = 1; i <= totalPagesInPDF; i++) {
 }
 
 const main = (pX, pageX, fileId, page) => {
-
-
     const canvasElement = document.createElement("canvas");
     pageX.appendChild(canvasElement);
     const ctx = canvasElement.getContext("2d");

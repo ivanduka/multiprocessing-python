@@ -139,3 +139,4 @@ if __name__ == "__main__":
     # data = get_data_from_db()
     # extract_csv_and_html(data)
     inject_apps()
+
