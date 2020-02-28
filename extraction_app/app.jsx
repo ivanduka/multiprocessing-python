@@ -20,29 +20,27 @@ class Index extends React.Component {
         ids.forEach(id => {
             const elem = document.getElementById(id);
             elem.parentNode.removeChild(elem);
-        })
+        });
 
 
         IDRViewer.on('pageload', data => {
-                // console.log("loaded page " + data.page);
+                console.log("loaded page " + data.page);
             }
         );
 
         IDRViewer.on('pagechange', data => {
-            this.changePage();
+            this.changePage(data.page);
         });
 
         this.changePage();
     }
 
-    changePage() {
-        const page = new URLSearchParams(window.location.search).get("page");
-        console.log('Page is', page);
-        this.setState(() => ({page: page}))
+    changePage(page) {
+        this.setState(() => ({page: page || new URLSearchParams(window.location.search).get("page")}))
     }
 
     render() {
-        const {page} = this.state
+        const {page} = this.state;
 
         return (
             <div>
