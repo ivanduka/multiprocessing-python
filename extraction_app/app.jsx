@@ -1,5 +1,6 @@
-React = window.React;
-ReactDOM = window.ReactDOM;
+const React = window.React;
+const ReactDOM = window.ReactDOM;
+const ResizeObserver = window.ResizeObserver;
 
 IDRViewer.on('ready', function (data) {
     console.log("ready " + data.page);
@@ -8,7 +9,17 @@ IDRViewer.on('ready', function (data) {
 class Index extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {page: "loading..."};
+        this.state = {
+            page: 0,
+            tableTitle: "",
+            fileId: document.title,
+            x1: -1,
+            y1: -1,
+            x2: -1,
+            y2: -1,
+            pageWidth: -1,
+            pageHeight: -1,
+        };
     }
 
     componentDidMount() {
@@ -24,7 +35,6 @@ class Index extends React.Component {
 
 
         IDRViewer.on('pageload', ({page}) => {
-                const fileId = document.title;
                 const pageX = document.querySelector("#page" + page);
                 const pX = document.querySelector("#p" + page);
 
@@ -43,8 +53,8 @@ class Index extends React.Component {
                 let pageWidth = parseInt(pageX.style.width);
                 let pageHeight = parseInt(pageX.style.height);
 
-                pX.style.opacity = "0.8";
-                pX.style.cursor = "crosshair";
+                pX.style.opacity = "0.75";
+                // pX.style.cursor = "crosshair";
 
                 new ResizeObserver(() => {
                     pageWidth = parseInt(pageX.style.width);
@@ -66,7 +76,17 @@ class Index extends React.Component {
                 pageX.addEventListener("mouseup", () => {
                     mouseIsPressed = false;
 
-                    console.log(`File ${fileId}, Page ${page}, PageWidth: ${pageWidth}, PageHeight: ${pageHeight},` +
+                    this.setState(() => ({
+                        page,
+                        x1: lastMouseX,
+                        y1: pageHeight - lastMouseY,
+                        x2: newMouseX,
+                        y2: pageHeight - newMouseY,
+                        pageWidth,
+                        pageHeight,
+                    }));
+
+                    console.log(`File ${this.state.fileId}, Page ${page}, PageWidth: ${pageWidth}, PageHeight: ${pageHeight},` +
                         ` x1: ${lastMouseX}, y1: ${pageHeight - lastMouseY}, x2: ${newMouseX}, y2: ${pageHeight - newMouseY}`);
                 });
 
@@ -87,8 +107,19 @@ class Index extends React.Component {
             }
         );
 
-        IDRViewer.on('pagechange', data => {
-            this.changePage(data.page);
+        IDRViewer.on('pagechange', ({page}) => {
+            this.changePage(page);
+            const canvasElement = document.querySelector(`#page${page} > canvas`);
+            if (canvasElement) {
+                const ctx = canvasElement.getContext("2d");
+                ctx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+            }
+        });
+
+        document.addEventListener('copy', (event) => {
+            const tableTitle = window.getSelection().toString();
+            this.setState(() => ({tableTitle}));
+            event.preventDefault();
         });
 
         this.changePage();
@@ -99,17 +130,30 @@ class Index extends React.Component {
     }
 
     render() {
-        const {page} = this.state;
+        const {page, tableTitle, fileId, x1, x2, y1, y2, pageHeight, pageWidth} = this.state;
 
         return (
             <div>
-                <p>{page}</p>
+                <p>File ID: {fileId}</p>
+                <p>Page: {page}</p>
+                <p>Table Title: {tableTitle}</p>
+                <p>x1: {x1}</p>
+                <p>y1: {y1}</p>
+                <p>x2: {x2}</p>
+                <p>y2: {y2}</p>
+                <p>Page Height: {pageHeight}</p>
+                <p>Page Width: {pageWidth}</p>
             </div>
         );
     }
 }
 
-ReactDOM.render(
-    <Index/>,
-    document.getElementById('root')
-);
+ReactDOM
+    .render(
+        <Index/>,
+        document
+            .getElementById(
+                'root'
+            )
+    )
+;
