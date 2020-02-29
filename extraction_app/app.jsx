@@ -158,6 +158,7 @@ class Index extends React.Component {
                 <p>y2: {y2}</p>
                 <p>Page Height: {pageHeight}</p>
                 <p>Page Width: {pageWidth}</p>
+                <button onClick={() => console.log('whatever!')}>Save</button>
             </div>
         );
     }
