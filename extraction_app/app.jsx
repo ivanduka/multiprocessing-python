@@ -125,7 +125,7 @@ class Index extends React.Component {
             this.clearRectangle();
         });
 
-        document.addEventListener('copy', (event) => {
+        document.addEventListener('copy', () => {
             const tableTitle = window.getSelection().toString();
             this.setState(() => ({tableTitle}));
             this.clearRectangle();
@@ -133,6 +133,12 @@ class Index extends React.Component {
 
         this.changePage();
         this.loadPrevTables();
+
+        document.addEventListener("keydown", event => {
+            if (event.altKey && event.code === "KeyS") {
+                this.handleSave();
+            }
+        })
     }
 
     clearRectangle() {
@@ -171,7 +177,7 @@ class Index extends React.Component {
     }
 
     handleSave() {
-        const {uuid, page, tableTitle, fileId, x1, x2, y1, y2, pageHeight, pageWidth} = this.state;
+        const {uuid, page, tableTitle, fileId, x1, x2, y1, y2, pageHeight, pageWidth, continuationOf} = this.state;
 
         if (uuid && page && tableTitle && fileId && x1) {
             fetch(`http://localhost:3000/api/create`, {
@@ -179,7 +185,9 @@ class Index extends React.Component {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({uuid, fileId, page, x1, x2, y1, y2, pageHeight, pageWidth, tableTitle,}),
+                body: JSON.stringify(
+                    {uuid, fileId, page, x1, x2, y1, y2, pageHeight, pageWidth, tableTitle, continuationOf}
+                ),
             })
                 .then(res => res.json())
                 .then(() => {
@@ -210,34 +218,51 @@ class Index extends React.Component {
         }
     }
 
+    handleChange(event) {
+        this.setState({continuationOf: event.target.value || null});
+    }
+
     render() {
-        const {tables, page, tableTitle, fileId, x1, x2, y1, y2, pageHeight, pageWidth} = this.state;
+        const {tables, page, tableTitle, fileId, x1, x2, y1, y2, pageHeight, pageWidth, continuationOf} = this.state;
         const coordinates = x1 ? `${parseInt(x1)}:${parseInt(y1)} => ${parseInt(x2)}:${parseInt(y2)}` : "NOT SET";
         const title = tableTitle ? tableTitle : "NOT COPIED";
 
         const listTables = tables => tables.map(table => {
-                const {tableTitle, page, uuid, x1, x2, y1, y2} = table;
+                const {tableTitle, page, uuid, x1, x2, y1, y2, continuationOf} = table;
+                const size = `(size ${Math.round(x2 - x1)}x${Math.round(y1 - y2)})`;
+                const continuation = <strong>(Continuation of: {table.continuationOf})</strong>
 
-                return <div className="small-bottom-margin">
-                    <p className="no-margin"><strong>{tableTitle}</strong></p>
+                return <div className="small-bottom-margin grey">
+                    <p className="no-margin"><strong>{tableTitle} {continuationOf ? continuation : null}</strong></p>
                     <p className="no-margin">Page: <strong>{page}</strong></p>
                     <p className="no-margin">UUID: {uuid}</p>
-                    <p className="no-margin">{x1}x{y1} => {x2}x{y2} (size {Math.round(x2 - x1)}x{Math.round(y1 - y2)})</p>
-                    {table.continuationOf ? <p className="no-margin">Cont.of: {table.continuationOf}</p> : null}
+                    <p className="no-margin">{x1}x{y1} => {x2}x{y2} {size}</p>
                     <button onClick={() => this.handleDelete(uuid)}>DELETE</button>
                     <hr/>
                 </div>
             }
         );
 
+        const prevPageTables = tables
+            .filter(table => page - table.page === 1)
+            .map(({tableTitle, uuid}) => <option value={uuid}>{tableTitle} ({uuid})</option>);
+
+        const continuationOfSelect =
+            <p><select value={continuationOf} onChange={(e) => this.handleChange(e)}>
+                <option value="">not a continuation</option>
+                {prevPageTables}
+            </select></p>;
+
         return (
             <div>
-                <p>File ID: {fileId}, Page: {page}</p>
-                <p>Table Title: <strong>{title}</strong></p>
-                <p>Coordinates: <strong>{coordinates}</strong></p>
-                {x1 ? <p>Page Width x Height: <strong>{pageWidth}x{pageHeight}</strong></p> : null}
-                <button onClick={() => this.handleSave()}>SAVE</button>
-                <hr/>
+                <div className="mainBlock">
+                    <p>File ID: {fileId}, Page: {page}</p>
+                    <p>Table Title: <strong>{title}</strong></p>
+                    <p>Coordinates: <strong>{coordinates}</strong></p>
+                    {x1 ? <p>Page Width x Height: <strong>{pageWidth}x{pageHeight}</strong></p> : null}
+                    {prevPageTables.length > 0 ? continuationOfSelect : null}
+                    <button className="greenButton" onClick={() => this.handleSave()}>SAVE</button>
+                </div>
                 {listTables(tables)}
             </div>
 

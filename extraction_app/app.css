@@ -21,7 +21,7 @@
 
 p {
     margin: 0;
-    margin-bottom: 5px;
+    margin-bottom: 10px;
 }
 
 .no-margin {
@@ -30,4 +30,29 @@ p {
 
 .small-bottom-margin {
     margin-bottom: 10px;
+}
+
+select {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.mainBlock {
+    border-bottom: 1px solid black;
+    padding-bottom: 20px;
+    margin-bottom: 5px;
+}
+
+.grey {
+    color: darkgray;
+}
+
+.greenButton {
+    font-size: larger;
+    border-radius: 10%;
+    background-color: lightgray;
+    border: 1px solid black;
+    box-shadow: 2px 2px 2px #333333;
 }

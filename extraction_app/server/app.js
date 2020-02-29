@@ -37,13 +37,14 @@ const get = async (req, res) => {
 };
 
 const create = async (req, res) => {
-    const {uuid, fileId, page, tableTitle, x1, x2, y1, y2, pageHeight, pageWidth} = req.body;
+    const {uuid, fileId, page, tableTitle, x1, x2, y1, y2, pageHeight, pageWidth, continuationOf} = req.body;
     console.log(req.body);
     const query = {
         query:
-            "INSERT INTO pdf_tables (uuid, fileId, page, pageWidth, pageHeight, x1, y1, x2, y2, tableTitle)" +
-            'VALUES (?,?,?,?,?,?,?,?,?,?);',
-        params: [uuid, fileId, page, pageWidth, pageHeight, x1, y1, x2, y2, tableTitle]
+            "INSERT INTO pdf_tables" +
+            "(uuid, fileId, page, pageWidth, pageHeight, x1, y1, x2, y2, tableTitle, continuationOf)" +
+            'VALUES (?,?,?,?,?,?,?,?,?,?,?);',
+        params: [uuid, fileId, page, pageWidth, pageHeight, x1, y1, x2, y2, tableTitle, continuationOf]
 
     }
     const result = await db(query);
