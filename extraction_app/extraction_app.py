@@ -162,8 +162,8 @@ def get_data_from_db():
 
 
 if __name__ == "__main__":
-    # change_pdf_titles()
-    # convert_pdfs()
+    change_pdf_titles()
+    convert_pdfs()
     # data = get_data_from_db()
     # extract_csv_and_html(data)
     inject_apps()

@@ -261,7 +261,7 @@ class Index extends React.Component {
                     <p>Coordinates: <strong>{coordinates}</strong></p>
                     {x1 ? <p>Page Width x Height: <strong>{pageWidth}x{pageHeight}</strong></p> : null}
                     {prevPageTables.length > 0 ? continuationOfSelect : null}
-                    <button className="greenButton" onClick={() => this.handleSave()}>SAVE</button>
+                    <button onClick={() => this.handleSave()}>SAVE (ALT+S)</button>
                 </div>
                 {listTables(tables)}
             </div>
