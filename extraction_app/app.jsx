@@ -15,16 +15,16 @@ class Index extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            uuid: "",
-            page: 0,
-            tableTitle: "",
+            uuid: uuid(),
+            page: null,
+            tableTitle: null,
             fileId: document.title,
-            x1: -1,
-            y1: -1,
-            x2: -1,
-            y2: -1,
-            pageWidth: -1,
-            pageHeight: -1,
+            x1: null,
+            y1: null,
+            x2: null,
+            y2: null,
+            pageWidth: null,
+            pageHeight: null,
             continuationOf: null
         };
     }
@@ -85,6 +85,7 @@ class Index extends React.Component {
                     mouseIsPressed = false;
 
                     this.setState(() => ({
+                        uuid: uuid(),
                         page,
                         x1: lastMouseX,
                         y1: pageHeight - lastMouseY,
@@ -121,12 +122,12 @@ class Index extends React.Component {
             }
             this.setState(() => ({
                 tableTitle: "",
-                x1: -1,
-                x2: -1,
-                y1: -1,
-                y2: -1,
-                pageHeight: -1,
-                pageWidth: -1,
+                x1: null,
+                x2: null,
+                y1: null,
+                y2: null,
+                pageHeight: null,
+                pageWidth: null,
             }))
         });
 
@@ -135,12 +136,12 @@ class Index extends React.Component {
             this.setState(() => ({
                 uuid: uuid(),
                 tableTitle,
-                x1: -1,
-                x2: -1,
-                y1: -1,
-                y2: -1,
-                pageHeight: -1,
-                pageWidth: -1,
+                x1: null,
+                x2: null,
+                y1: null,
+                y2: null,
+                pageHeight: null,
+                pageWidth: null,
             }));
             event.preventDefault();
         });
@@ -165,8 +166,7 @@ class Index extends React.Component {
                 <p>y1: {y1}</p>
                 <p>x2: {x2}</p>
                 <p>y2: {y2}</p>
-                <p>Page Height: {pageHeight}</p>
-                <p>Page Width: {pageWidth}</p>
+                <p>Page Width x Height: {pageWidth ? `${pageWidth} x ${pageHeight}` : null}</p>
                 <button onClick={() => console.log('whatever!')}>Save</button>
             </div>
         );

@@ -17,5 +17,6 @@
 }
 
 #root > div > p {
-    margin: 0 0 10px;
+    margin: 0 0 5px;
+    /*margin: 0;*/
 }
