@@ -6,10 +6,18 @@ const uuid = () => ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
     (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
 );
 
-
-IDRViewer.on('ready', function (data) {
-    console.log("ready " + data.page);
-});
+const cleanUpUI = () => {
+    IDRViewer.setLayout("presentation");
+    IDRViewer.setZoom("fitpage");
+    document.body.classList.remove("light-theme");
+    document.body.classList.add("dark-theme");
+    const ids = ["viewBtn", "btnSideToggle", "btnZoomIn", "btnZoomOut", "btnSelect",
+        "btnMove", "btnFullScreen", "btnThemeToggle", "zoomBtn"];
+    ids.forEach(id => {
+        const elem = document.getElementById(id);
+        elem.parentNode.removeChild(elem);
+    });
+}
 
 class Index extends React.Component {
     constructor(props) {
@@ -25,22 +33,14 @@ class Index extends React.Component {
             y2: null,
             pageWidth: null,
             pageHeight: null,
-            continuationOf: null
+            continuationOf: null,
+            previousTables: [],
         };
     }
 
-    componentDidMount() {
-        IDRViewer.setLayout("presentation");
-        IDRViewer.setZoom("fitpage");
-        document.body.classList.remove("light-theme");
-        document.body.classList.add("dark-theme");
-        const ids = ["viewBtn", "btnSideToggle", "btnZoomIn", "btnZoomOut", "btnSelect",
-            "btnMove", "btnFullScreen", "btnThemeToggle", "zoomBtn"];
-        ids.forEach(id => {
-            const elem = document.getElementById(id);
-            elem.parentNode.removeChild(elem);
-        });
 
+    componentDidMount() {
+        cleanUpUI();
 
         IDRViewer.on('pageload', ({page}) => {
                 const pageX = document.querySelector("#page" + page);
@@ -62,7 +62,6 @@ class Index extends React.Component {
                 let pageHeight = parseInt(pageX.style.height);
 
                 pX.style.opacity = "0.75";
-                // pX.style.cursor = "crosshair";
 
                 new ResizeObserver(() => {
                     pageWidth = parseInt(pageX.style.width);
@@ -76,8 +75,8 @@ class Index extends React.Component {
 
                 pageX.addEventListener("mousedown", e => {
                     const rect = canvasElement.getBoundingClientRect();
-                    lastMouseX = e.clientX - rect.left; //x position within the element.
-                    lastMouseY = e.clientY - rect.top; //y position within the element.
+                    lastMouseX = e.clientX - rect.left;
+                    lastMouseY = e.clientY - rect.top;
                     mouseIsPressed = true;
                 });
 
@@ -100,7 +99,7 @@ class Index extends React.Component {
                     newMouseX = e.clientX - canvasLeftOffset;
                     newMouseY = e.clientY - canvasTopOffset;
                     if (mouseIsPressed) {
-                        ctx.clearRect(0, 0, canvasElement.width, canvasElement.height); //clear canvas
+                        ctx.clearRect(0, 0, canvasElement.width, canvasElement.height);
                         ctx.beginPath();
                         const width = newMouseX - lastMouseX;
                         const height = newMouseY - lastMouseY;
@@ -115,38 +114,41 @@ class Index extends React.Component {
 
         IDRViewer.on('pagechange', ({page}) => {
             this.changePage(page);
-            const canvasElement = document.querySelector(`#page${page} > canvas`);
-            if (canvasElement) {
-                const ctx = canvasElement.getContext("2d");
-                ctx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-            }
-            this.setState(() => ({
-                tableTitle: "",
-                x1: null,
-                x2: null,
-                y1: null,
-                y2: null,
-                pageHeight: null,
-                pageWidth: null,
-            }))
+            this.setState(() => ({tableTitle: null}))
+            this.clearRectangle();
         });
 
         document.addEventListener('copy', (event) => {
             const tableTitle = window.getSelection().toString();
-            this.setState(() => ({
-                uuid: uuid(),
-                tableTitle,
-                x1: null,
-                x2: null,
-                y1: null,
-                y2: null,
-                pageHeight: null,
-                pageWidth: null,
-            }));
+            this.setState(() => ({tableTitle}));
+            this.clearRectangle();
             event.preventDefault();
         });
 
         this.changePage();
+    }
+
+    clearRectangle() {
+        const canvasElement = document.querySelector(`#page${this.state.page} > canvas`);
+        if (canvasElement) {
+            const ctx = canvasElement.getContext("2d");
+            ctx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+        }
+        this.setState(() => ({
+            uuid: uuid(),
+            x1: null,
+            x2: null,
+            y1: null,
+            y2: null,
+            pageHeight: null,
+            pageWidth: null,
+        }));
+    }
+
+    loadPrevTables(page) {
+        fetch(`http://localhost/api`)
+            .then(res => res.json())
+            .then(json => this.setState({previousTables: json}));
     }
 
     changePage(page) {
@@ -168,7 +170,9 @@ class Index extends React.Component {
                 <p>y2: {y2}</p>
                 <p>Page Width x Height: {pageWidth ? `${pageWidth} x ${pageHeight}` : null}</p>
                 <button onClick={() => console.log('whatever!')}>Save</button>
+                <hr/>
             </div>
+
         );
     }
 }
