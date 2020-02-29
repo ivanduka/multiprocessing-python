@@ -19,13 +19,19 @@ const cleanUpUI = () => {
     });
 };
 
-const listTables = tables => tables.map(table =>
-    <div className="small-bottom-margin">
-        <p className="no-margin">{table.tableTitle}</p>
-        <p className="no-margin">Page: {table.page}, UUID: {table.uuid}</p>
-        {table.continuationOf ? <p className="no-margin">Cont.of: {table.continuationOf}</p> : null}
-        <hr />
-    </div>)
+const listTables = tables => tables.map(table => {
+        const {tableTitle, page, uuid, x1, x2, y1, y2} = table;
+
+        return <div className="small-bottom-margin">
+            <p className="no-margin"><strong>{tableTitle}</strong></p>
+            <p className="no-margin">Page: <strong>{page}</strong></p>
+            <p className="no-margin">UUID: {uuid}</p>
+            <p className="no-margin">{x1}x{y1} => {x2}x{y2} (size {Math.round(x2 - x1)}x{Math.round(y1 - y2)})</p>
+            {table.continuationOf ? <p className="no-margin">Cont.of: {table.continuationOf}</p> : null}
+            <hr/>
+        </div>
+    }
+)
 
 class Index extends React.Component {
     constructor(props) {
