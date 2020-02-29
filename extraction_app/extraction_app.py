@@ -13,7 +13,6 @@ html_folder_path = Path("./html")
 index_files_paths = list(html_folder_path.rglob("**/index.html"))
 results_folder_path = Path("./results")
 converter_path = Path("./buildvu-html-trial.jar")
-app_path = "../../process.js"
 
 
 def clean_folder(folder):
@@ -82,11 +81,40 @@ def convert_pdfs():
 def inject_app(input_file):
     with input_file.open() as html_file:
         soup = BeautifulSoup(html_file, "html.parser")
+        app_path = "../../app.jsx"
         if not soup.findAll('script', src=app_path):
-            print(f"Adding script to {html_file}")
+            print(f"Adding scripts and CSS to {html_file}")
+
+            div = soup.new_tag("div")
+            div["id"] = "root"
+            soup.find('div', id="idrviewer").insert_before(div)
+
+            for link in soup.find_all("link"):
+                if link['href'] == "https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css":
+                    link.decompose()
+
+            scripts = ["../../react.production.min.js", "../../react-dom.production.min.js", "../../babel.min.js"]
+            for item in scripts:
+                script = soup.new_tag('script')
+                script['src'] = item
+                soup.body.append(script)
+
             script = soup.new_tag('script')
             script['src'] = app_path
+            script['type'] = "text/babel"
             soup.body.append(script)
+
+            link = soup.new_tag("link")
+            link['href'] = "../../app.css"
+            link['rel'] = 'stylesheet'
+            link['type'] = "text/css"
+            soup.body.append(link)
+
+            link2 = soup.new_tag("link")
+            link2['href'] = "../../fontawesome-free-5.12.1-web/css/all.css"
+            link2['rel'] = 'stylesheet'
+            soup.head.append(link2)
+
             with input_file.open("w", encoding='utf-8') as file:
                 file.write(str(soup))
         else:
@@ -139,4 +167,3 @@ if __name__ == "__main__":
     # data = get_data_from_db()
     # extract_csv_and_html(data)
     inject_apps()
-
