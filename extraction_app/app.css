@@ -6,6 +6,9 @@
     position: absolute;
     padding: 5px;
     border: 5px solid #666;
+    overflow-y: scroll;
+    max-width: 35%;
+    word-wrap: break-word;
 }
 
 #idrviewer {
@@ -16,7 +19,15 @@
     position: absolute;
 }
 
-#root > div > p {
-    margin: 0 0 5px;
-    /*margin: 0;*/
+p {
+    margin: 0;
+    margin-bottom: 5px;
+}
+
+.no-margin {
+    margin: 0;
+}
+
+.small-bottom-margin {
+    margin-bottom: 10px;
 }

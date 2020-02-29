@@ -17,7 +17,14 @@ const cleanUpUI = () => {
         const elem = document.getElementById(id);
         elem.parentNode.removeChild(elem);
     });
-}
+};
+
+const listTables = tables => tables.map(table =>
+    <div>
+        <p className="no-margin">{table.tableTitle}</p>
+        <p className="no-margin">Page: {table.page}, UUID: {table.uuid}</p>
+        {table.continuationOf ? <p className="no-margin">Cont.of: {table.continuationOf}</p> : null}
+    </div>)
 
 class Index extends React.Component {
     constructor(props) {
@@ -34,7 +41,7 @@ class Index extends React.Component {
             pageWidth: null,
             pageHeight: null,
             continuationOf: null,
-            previousTables: [],
+            tables: [],
         };
     }
 
@@ -74,6 +81,7 @@ class Index extends React.Component {
                 }).observe(pageX);
 
                 pageX.addEventListener("mousedown", e => {
+                    this.clearRectangle();
                     const rect = canvasElement.getBoundingClientRect();
                     lastMouseX = e.clientX - rect.left;
                     lastMouseY = e.clientY - rect.top;
@@ -82,17 +90,20 @@ class Index extends React.Component {
 
                 pageX.addEventListener("mouseup", () => {
                     mouseIsPressed = false;
-
-                    this.setState(() => ({
-                        uuid: uuid(),
-                        page,
-                        x1: lastMouseX,
-                        y1: pageHeight - lastMouseY,
-                        x2: newMouseX,
-                        y2: pageHeight - newMouseY,
-                        pageWidth,
-                        pageHeight,
-                    }));
+                    if (lastMouseX === newMouseX && lastMouseY === newMouseY) {
+                        this.clearRectangle();
+                    } else {
+                        this.setState(() => ({
+                            uuid: uuid(),
+                            page,
+                            x1: lastMouseX,
+                            y1: pageHeight - lastMouseY,
+                            x2: newMouseX,
+                            y2: pageHeight - newMouseY,
+                            pageWidth,
+                            pageHeight,
+                        }));
+                    }
                 });
 
                 pageX.addEventListener("mousemove", e => {
@@ -113,8 +124,9 @@ class Index extends React.Component {
         );
 
         IDRViewer.on('pagechange', ({page}) => {
+            this.loadPrevTables();
             this.changePage(page);
-            this.setState(() => ({tableTitle: null}))
+            this.setState(() => ({tableTitle: null}));
             this.clearRectangle();
         });
 
@@ -122,10 +134,10 @@ class Index extends React.Component {
             const tableTitle = window.getSelection().toString();
             this.setState(() => ({tableTitle}));
             this.clearRectangle();
-            event.preventDefault();
         });
 
         this.changePage();
+        this.loadPrevTables();
     }
 
     clearRectangle() {
@@ -145,10 +157,19 @@ class Index extends React.Component {
         }));
     }
 
-    loadPrevTables(page) {
-        fetch(`http://localhost/api`)
+    loadPrevTables() {
+        fetch(`http://localhost:3000/api/get`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({fileId: this.state.fileId}),
+        })
             .then(res => res.json())
-            .then(json => this.setState({previousTables: json}));
+            .then(json => {
+                console.log(json.results);
+                this.setState({tables: json.results});
+            });
     }
 
     changePage(page) {
@@ -156,21 +177,19 @@ class Index extends React.Component {
     }
 
     render() {
-        const {uuid, page, tableTitle, fileId, x1, x2, y1, y2, pageHeight, pageWidth} = this.state;
+        const {tables, page, tableTitle, fileId, x1, x2, y1, y2, pageHeight, pageWidth} = this.state;
+        const coordinates = x1 ? `${parseInt(x1)}:${parseInt(y1)} => ${parseInt(x2)}:${parseInt(y2)}` : "NOT SET";
+        const title = tableTitle ? tableTitle : "NOT COPIED";
 
         return (
             <div>
-                <p>UUID: {uuid}</p>
-                <p>File ID: {fileId}</p>
-                <p>Page: {page}</p>
-                <p>Table Title: {tableTitle}</p>
-                <p>x1: {x1}</p>
-                <p>y1: {y1}</p>
-                <p>x2: {x2}</p>
-                <p>y2: {y2}</p>
-                <p>Page Width x Height: {pageWidth ? `${pageWidth} x ${pageHeight}` : null}</p>
+                <p>File ID: {fileId}, Page: {page}</p>
+                <p>Table Title: <strong>{title}</strong></p>
+                <p>Coordinates: <strong>{coordinates}</strong></p>
+                {x1 ? <p>Page Width x Height: <strong>{pageWidth}x{pageHeight}</strong></p> : null}
                 <button onClick={() => console.log('whatever!')}>Save</button>
                 <hr/>
+                {listTables(tables)}
             </div>
 
         );

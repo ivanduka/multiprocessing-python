@@ -2,10 +2,13 @@ require('dotenv').config();
 const mysql = require('promise-mysql');
 const express = require('express');
 const bodyParser = require('body-parser');
+const cors = require('cors');
+
 
 const app = express();
 
 app.use(bodyParser.json());
+app.use(cors());
 
 const db = async (query) => {
     const config = {
@@ -48,9 +51,8 @@ const del = async (req, res) => {
     res.json(result);
 };
 
-app.route("/api")
-    .get(get)
-    .post(create)
-    .delete(del);
+app.route("/api/get").post(get);
+app.route("/api/create").post(create);
+app.route("/api/delete").post(del);
 
 app.listen(3000, () => console.log("Listening..."));
