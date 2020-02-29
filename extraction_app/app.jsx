@@ -19,19 +19,6 @@ const cleanUpUI = () => {
     });
 };
 
-const listTables = tables => tables.map(table => {
-        const {tableTitle, page, uuid, x1, x2, y1, y2} = table;
-
-        return <div className="small-bottom-margin">
-            <p className="no-margin"><strong>{tableTitle}</strong></p>
-            <p className="no-margin">Page: <strong>{page}</strong></p>
-            <p className="no-margin">UUID: {uuid}</p>
-            <p className="no-margin">{x1}x{y1} => {x2}x{y2} (size {Math.round(x2 - x1)}x{Math.round(y1 - y2)})</p>
-            {table.continuationOf ? <p className="no-margin">Cont.of: {table.continuationOf}</p> : null}
-            <hr/>
-        </div>
-    }
-)
 
 class Index extends React.Component {
     constructor(props) {
@@ -175,7 +162,6 @@ class Index extends React.Component {
         })
             .then(res => res.json())
             .then(json => {
-                console.log(json.results);
                 this.setState({tables: json.results});
             });
     }
@@ -196,12 +182,31 @@ class Index extends React.Component {
                 body: JSON.stringify({uuid, fileId, page, x1, x2, y1, y2, pageHeight, pageWidth, tableTitle,}),
             })
                 .then(res => res.json())
-                .then(json => {
-                    console.log(json);
+                .then(() => {
                     this.loadPrevTables();
+                    this.clearRectangle();
+                    this.setState({tableTitle: null})
                 });
         } else {
             alert("Copy title and select an area")
+        }
+    }
+
+    handleDelete(uuid) {
+        if (window.confirm(`Do you really want to delete ${uuid}?`)) {
+            fetch(`http://localhost:3000/api/delete`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({uuid}),
+            })
+                .then(res => res.json())
+                .then(() => {
+                    this.loadPrevTables();
+                    this.clearRectangle();
+                    this.setState({tableTitle: null})
+                });
         }
     }
 
@@ -210,13 +215,28 @@ class Index extends React.Component {
         const coordinates = x1 ? `${parseInt(x1)}:${parseInt(y1)} => ${parseInt(x2)}:${parseInt(y2)}` : "NOT SET";
         const title = tableTitle ? tableTitle : "NOT COPIED";
 
+        const listTables = tables => tables.map(table => {
+                const {tableTitle, page, uuid, x1, x2, y1, y2} = table;
+
+                return <div className="small-bottom-margin">
+                    <p className="no-margin"><strong>{tableTitle}</strong></p>
+                    <p className="no-margin">Page: <strong>{page}</strong></p>
+                    <p className="no-margin">UUID: {uuid}</p>
+                    <p className="no-margin">{x1}x{y1} => {x2}x{y2} (size {Math.round(x2 - x1)}x{Math.round(y1 - y2)})</p>
+                    {table.continuationOf ? <p className="no-margin">Cont.of: {table.continuationOf}</p> : null}
+                    <button onClick={() => this.handleDelete(uuid)}>DELETE</button>
+                    <hr/>
+                </div>
+            }
+        );
+
         return (
             <div>
                 <p>File ID: {fileId}, Page: {page}</p>
                 <p>Table Title: <strong>{title}</strong></p>
                 <p>Coordinates: <strong>{coordinates}</strong></p>
                 {x1 ? <p>Page Width x Height: <strong>{pageWidth}x{pageHeight}</strong></p> : null}
-                <button onClick={() => this.handleSave()}>Save</button>
+                <button onClick={() => this.handleSave()}>SAVE</button>
                 <hr/>
                 {listTables(tables)}
             </div>

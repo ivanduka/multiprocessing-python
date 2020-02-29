@@ -52,8 +52,8 @@ const create = async (req, res) => {
 
 const del = async (req, res) => {
     const {uuid} = req.body;
-    const query = `DELETE FROM extraction_app.pdf_tables WHERE uuid = ${uuid};`;
-    const result = await db({query, params: []});
+    const query = `DELETE FROM extraction_app.pdf_tables WHERE uuid = ?;`;
+    const result = await db({query, params: [uuid]});
     res.json(result);
 };
 
