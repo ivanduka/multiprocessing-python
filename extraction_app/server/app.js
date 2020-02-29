@@ -10,7 +10,7 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
-const db = async (query) => {
+const db = async (q) => {
     const config = {
         host: process.env.DB_HOST,
         user: process.env.DB_USER,
@@ -20,7 +20,7 @@ const db = async (query) => {
 
     try {
         const connection = await mysql.createConnection(config);
-        const results = await connection.query(query);
+        const results = await connection.query(q.query, q.params);
         await connection.end();
         return {error: null, results}
     } catch (error) {
@@ -32,14 +32,20 @@ const db = async (query) => {
 const get = async (req, res) => {
     const {fileId} = req.body;
     const query = `SELECT * FROM extraction_app.pdf_tables WHERE fileId = ${fileId} ORDER BY page DESC;`;
-    const result = await db(query);
+    const result = await db({query, params: []});
     res.json(result);
 };
 
 const create = async (req, res) => {
     const {uuid, fileId, page, tableTitle, x1, x2, y1, y2, pageHeight, pageWidth} = req.body;
-    const query = "INSERT INTO pdf_tables (uuid, fileId, page, pageWidth, pageHeight, x1, y1, x2, y2, tableTitle)" +
-        `VALUES (${uuid}, ${fileId}, ${page}, ${pageWidth},${pageHeight},${x1}, ${y1}, ${x2}, ${y2}, ${tableTitle});`;
+    console.log(req.body);
+    const query = {
+        query:
+            "INSERT INTO pdf_tables (uuid, fileId, page, pageWidth, pageHeight, x1, y1, x2, y2, tableTitle)" +
+            'VALUES (?,?,?,?,?,?,?,?,?,?);',
+        params: [uuid, fileId, page, pageWidth, pageHeight, x1, y1, x2, y2, tableTitle]
+
+    }
     const result = await db(query);
     res.json(result);
 };
@@ -47,7 +53,7 @@ const create = async (req, res) => {
 const del = async (req, res) => {
     const {uuid} = req.body;
     const query = `DELETE FROM extraction_app.pdf_tables WHERE uuid = ${uuid};`;
-    const result = await db(query);
+    const result = await db({query, params: []});
     res.json(result);
 };
 

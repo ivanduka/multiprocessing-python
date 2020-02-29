@@ -20,20 +20,22 @@ const cleanUpUI = () => {
 };
 
 const listTables = tables => tables.map(table =>
-    <div>
+    <div className="small-bottom-margin">
         <p className="no-margin">{table.tableTitle}</p>
         <p className="no-margin">Page: {table.page}, UUID: {table.uuid}</p>
         {table.continuationOf ? <p className="no-margin">Cont.of: {table.continuationOf}</p> : null}
+        <hr />
     </div>)
 
 class Index extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            error: null,
             uuid: uuid(),
             page: null,
             tableTitle: null,
-            fileId: document.title,
+            fileId: parseInt(document.title),
             x1: null,
             y1: null,
             x2: null,
@@ -176,6 +178,27 @@ class Index extends React.Component {
         this.setState(() => ({page: page || new URLSearchParams(window.location.search).get("page")}))
     }
 
+    handleSave() {
+        const {uuid, page, tableTitle, fileId, x1, x2, y1, y2, pageHeight, pageWidth} = this.state;
+
+        if (uuid && page && tableTitle && fileId && x1) {
+            fetch(`http://localhost:3000/api/create`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({uuid, fileId, page, x1, x2, y1, y2, pageHeight, pageWidth, tableTitle,}),
+            })
+                .then(res => res.json())
+                .then(json => {
+                    console.log(json);
+                    this.loadPrevTables();
+                });
+        } else {
+            alert("Copy title and select an area")
+        }
+    }
+
     render() {
         const {tables, page, tableTitle, fileId, x1, x2, y1, y2, pageHeight, pageWidth} = this.state;
         const coordinates = x1 ? `${parseInt(x1)}:${parseInt(y1)} => ${parseInt(x2)}:${parseInt(y2)}` : "NOT SET";
@@ -187,7 +210,7 @@ class Index extends React.Component {
                 <p>Table Title: <strong>{title}</strong></p>
                 <p>Coordinates: <strong>{coordinates}</strong></p>
                 {x1 ? <p>Page Width x Height: <strong>{pageWidth}x{pageHeight}</strong></p> : null}
-                <button onClick={() => console.log('whatever!')}>Save</button>
+                <button onClick={() => this.handleSave()}>Save</button>
                 <hr/>
                 {listTables(tables)}
             </div>
