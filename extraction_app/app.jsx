@@ -27,7 +27,8 @@ class Index extends React.Component {
         IDRViewer.setZoom("fitpage");
         document.body.classList.remove("light-theme");
         document.body.classList.add("dark-theme");
-        const ids = ["viewBtn", "btnZoomIn", "btnZoomOut", "btnSelect", "btnMove", "btnFullScreen", "btnThemeToggle", "zoomBtn"];
+        const ids = ["viewBtn", "btnSideToggle", "btnZoomIn", "btnZoomOut", "btnSelect",
+            "btnMove", "btnFullScreen", "btnThemeToggle", "zoomBtn"];
         ids.forEach(id => {
             const elem = document.getElementById(id);
             elem.parentNode.removeChild(elem);
@@ -85,9 +86,6 @@ class Index extends React.Component {
                         pageWidth,
                         pageHeight,
                     }));
-
-                    console.log(`File ${this.state.fileId}, Page ${page}, PageWidth: ${pageWidth}, PageHeight: ${pageHeight},` +
-                        ` x1: ${lastMouseX}, y1: ${pageHeight - lastMouseY}, x2: ${newMouseX}, y2: ${pageHeight - newMouseY}`);
                 });
 
                 pageX.addEventListener("mousemove", e => {
@@ -114,11 +112,28 @@ class Index extends React.Component {
                 const ctx = canvasElement.getContext("2d");
                 ctx.clearRect(0, 0, canvasElement.width, canvasElement.height);
             }
+            this.setState(() => ({
+                tableTitle: "",
+                x1: -1,
+                x2: -1,
+                y1: -1,
+                y2: -1,
+                pageHeight: -1,
+                pageWidth: -1,
+            }))
         });
 
         document.addEventListener('copy', (event) => {
             const tableTitle = window.getSelection().toString();
-            this.setState(() => ({tableTitle}));
+            this.setState(() => ({
+                tableTitle,
+                x1: -1,
+                x2: -1,
+                y1: -1,
+                y2: -1,
+                pageHeight: -1,
+                pageWidth: -1,
+            }));
             event.preventDefault();
         });
 
@@ -148,12 +163,4 @@ class Index extends React.Component {
     }
 }
 
-ReactDOM
-    .render(
-        <Index/>,
-        document
-            .getElementById(
-                'root'
-            )
-    )
-;
+ReactDOM.render(<Index/>, document.getElementById('root'));
