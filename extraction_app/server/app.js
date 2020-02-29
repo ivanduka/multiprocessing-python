@@ -28,7 +28,7 @@ const db = async (query) => {
 
 const get = async (req, res) => {
     const {fileId} = req.body;
-    const query = `SELECT * FROM extraction_app.pdf_tables WHERE fileId = ${fileId};`;
+    const query = `SELECT * FROM extraction_app.pdf_tables WHERE fileId = ${fileId} ORDER BY page DESC;`;
     const result = await db(query);
     res.json(result);
 };
