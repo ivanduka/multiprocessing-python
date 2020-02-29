@@ -2,6 +2,11 @@ const React = window.React;
 const ReactDOM = window.ReactDOM;
 const ResizeObserver = window.ResizeObserver;
 
+const uuid = () => ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+    (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+);
+
+
 IDRViewer.on('ready', function (data) {
     console.log("ready " + data.page);
 });
@@ -10,6 +15,7 @@ class Index extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            uuid: "",
             page: 0,
             tableTitle: "",
             fileId: document.title,
@@ -19,6 +25,7 @@ class Index extends React.Component {
             y2: -1,
             pageWidth: -1,
             pageHeight: -1,
+            continuationOf: null
         };
     }
 
@@ -126,6 +133,7 @@ class Index extends React.Component {
         document.addEventListener('copy', (event) => {
             const tableTitle = window.getSelection().toString();
             this.setState(() => ({
+                uuid: uuid(),
                 tableTitle,
                 x1: -1,
                 x2: -1,
@@ -145,10 +153,11 @@ class Index extends React.Component {
     }
 
     render() {
-        const {page, tableTitle, fileId, x1, x2, y1, y2, pageHeight, pageWidth} = this.state;
+        const {uuid, page, tableTitle, fileId, x1, x2, y1, y2, pageHeight, pageWidth} = this.state;
 
         return (
             <div>
+                <p>UUID: {uuid}</p>
                 <p>File ID: {fileId}</p>
                 <p>Page: {page}</p>
                 <p>Table Title: {tableTitle}</p>
