@@ -46,7 +46,7 @@ const create = async (req, res) => {
             'VALUES (?,?,?,?,?,?,?,?,?,?,?);',
         params: [uuid, fileId, page, pageWidth, pageHeight, x1, y1, x2, y2, tableTitle, continuationOf]
 
-    }
+    };
     const result = await db(query);
     res.json(result);
 };
