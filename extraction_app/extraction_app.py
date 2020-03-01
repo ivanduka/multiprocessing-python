@@ -6,6 +6,10 @@ import PyPDF2
 from pathlib import Path
 from shutil import rmtree
 from bs4 import BeautifulSoup
+import pandas as pd
+from dotenv import load_dotenv
+import os
+from sqlalchemy import create_engine
 
 pdf_files_folder = Path("./pdf")
 pdf_files = list(pdf_files_folder.glob("*.pdf"))
@@ -13,6 +17,7 @@ html_folder_path = Path("./html")
 index_files_paths = list(html_folder_path.rglob("**/index.html"))
 results_folder_path = Path("./results")
 converter_path = Path("./buildvu-html-trial.jar")
+dot_env_path = Path("./server/.env")
 
 
 def clean_folder(folder):
@@ -153,17 +158,21 @@ def extract_csv_and_html(inputs):
 
 
 def get_data_from_db():
-    from_db = [
-        [2445104, 29, "54,605,564,69", 23492374927349723947],
-        [3024953, 7, "71,419,541,124", 12339457394572093745]
-    ]
-
-    return [{"id": item[0], "page": item[1], "area": item[2], "uuid": item[3]} for item in from_db]
+    load_dotenv(dotenv_path=dot_env_path)
+    host = os.getenv("DB_HOST")
+    database = os.getenv("DB_DATABASE")
+    user = os.getenv("DB_USER")
+    password = os.getenv("DB_PASS")
+    connection = create_engine(f"mysql+mysqldb://{user}:{password}@{host}/{database}")
+    query = "SELECT * FROM extraction_app.pdf_tables ORDER BY fileId;"
+    df = pd.read_sql(query, con=connection)
+    return df
 
 
 if __name__ == "__main__":
-    change_pdf_titles()
-    convert_pdfs()
-    # data = get_data_from_db()
+    # change_pdf_titles()
+    # convert_pdfs()
+    # inject_apps()
+    data = get_data_from_db()
+    print(data)
     # extract_csv_and_html(data)
-    inject_apps()
