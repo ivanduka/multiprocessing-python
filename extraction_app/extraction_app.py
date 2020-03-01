@@ -13,9 +13,9 @@ from sqlalchemy import create_engine
 
 pdf_files_folder = Path("./pdf")
 pdf_files = list(pdf_files_folder.glob("*.pdf"))
-html_folder_path = Path("./html")
+html_folder_path = Path("./server/html")
 index_files_paths = list(html_folder_path.rglob("**/index.html"))
-results_folder_path = Path("./results")
+results_folder_path = Path("./server/results")
 converter_path = Path("./buildvu-html-trial.jar")
 dot_env_path = Path("./server/.env")
 
@@ -86,7 +86,7 @@ def convert_pdfs():
 def inject_app(input_file):
     with input_file.open() as html_file:
         soup = BeautifulSoup(html_file, "html.parser")
-        app_path = "../../app.jsx"
+        app_path = "/app.jsx"  # path
         if not soup.findAll('script', src=app_path):
             print(f"Adding scripts and CSS to {html_file}")
 
@@ -98,7 +98,7 @@ def inject_app(input_file):
                 if link['href'] == "https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css":
                     link.decompose()
 
-            scripts = ["../../react.production.min.js", "../../react-dom.production.min.js", "../../babel.min.js"]
+            scripts = ["/react.production.min.js", "/react-dom.production.min.js", "/babel.min.js"]  # path
             for item in scripts:
                 script = soup.new_tag('script')
                 script['src'] = item
@@ -110,14 +110,15 @@ def inject_app(input_file):
             soup.body.append(script)
 
             link = soup.new_tag("link")
-            link['href'] = "../../app.css"
+            link['href'] = "/app.css"  # path
             link['rel'] = 'stylesheet'
             link['type'] = "text/css"
             soup.body.append(link)
 
             link2 = soup.new_tag("link")
-            link2['href'] = "../../fontawesome-free-5.12.1-web/css/all.css"
+            link2['href'] = "/fontawesome-free-5.12.1-web/css/all.css"  # path
             link2['rel'] = 'stylesheet'
+            link2['type'] = "text/css"
             soup.head.append(link2)
 
             with input_file.open("w", encoding='utf-8') as file:
@@ -171,8 +172,8 @@ def get_data_from_db():
 
 if __name__ == "__main__":
     # change_pdf_titles()
-    # convert_pdfs()
-    # inject_apps()
-    data = get_data_from_db()
-    print(data)
+    convert_pdfs()
+    inject_apps()
+    # data = get_data_from_db()
+    # print(data)
     # extract_csv_and_html(data)

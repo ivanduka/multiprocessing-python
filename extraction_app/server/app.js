@@ -3,7 +3,8 @@ const mysql = require('promise-mysql');
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-
+const path = require("path");
+const serveIndex = require("serve-index");
 
 const app = express();
 
@@ -38,7 +39,6 @@ const get = async (req, res) => {
 
 const create = async (req, res) => {
     const {uuid, fileId, page, tableTitle, x1, x2, y1, y2, pageHeight, pageWidth, continuationOf} = req.body;
-    console.log(req.body);
     const query = {
         query:
             "INSERT INTO pdf_tables" +
@@ -62,4 +62,10 @@ app.route("/api/get").post(get);
 app.route("/api/create").post(create);
 app.route("/api/delete").post(del);
 
-app.listen(3000, () => console.log("Listening..."));
+const htmlFilesPath = path.join(__dirname, "/html");
+app.use("/", express.static(htmlFilesPath));
+app.use("/", express.static(path.join(__dirname, "/public")));
+app.use(serveIndex(htmlFilesPath, {}));
+
+const port = 3000;
+app.listen(port, () => console.log(`Listening on port ${port}...`));
