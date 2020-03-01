@@ -1,6 +1,7 @@
 const React = window.React;
 const ReactDOM = window.ReactDOM;
 const ResizeObserver = window.ResizeObserver;
+const IDRViewer = window.IDRViewer;
 
 const uuid = () => ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
     (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
@@ -37,6 +38,8 @@ class Index extends React.Component {
             pageHeight: null,
             continuationOf: null,
             tables: [],
+            pagesWithTables: [],
+            totalPages: 1,
         };
     }
 
@@ -133,12 +136,56 @@ class Index extends React.Component {
 
         this.changePage();
         this.loadPrevTables();
+        this.loadSearchAndTotalPages();
 
         document.addEventListener("keydown", event => {
             if (event.altKey && event.code === "KeyS") {
                 this.handleSave();
+                event.preventDefault();
+            }
+
+            if (event.code === "ArrowDown") {
+                this.navigateToTables(true);
+                event.preventDefault();
+
+            }
+
+            if (event.code === "ArrowUp") {
+                this.navigateToTables(false);
+                event.preventDefault();
             }
         })
+
+
+    }
+
+    loadSearchAndTotalPages() {
+        fetch(`search.json`,)
+            .then(res => res.json())
+            .then((json) => {
+                const pagesWithTables = [null, ...json.map(page => page.toLowerCase().includes("table"))];
+                this.setState({pagesWithTables, totalPages: json.length})
+            });
+    }
+
+    navigateToTables(next) {
+        const {page, pagesWithTables, totalPages} = this.state;
+
+        if (next) {
+            for (let i = page + 1; i <= totalPages; i++) {
+                if (pagesWithTables[i]) {
+                    IDRViewer.goToPage(i);
+                    break;
+                }
+            }
+        } else {
+            for (let i = page - 1; i >= 1; i--) {
+                if (pagesWithTables[i]) {
+                    IDRViewer.goToPage(i);
+                    break;
+                }
+            }
+        }
     }
 
     clearRectangle() {
@@ -230,7 +277,7 @@ class Index extends React.Component {
         const listTables = tables => tables.map(table => {
                 const {tableTitle, page, uuid, x1, x2, y1, y2, continuationOf} = table;
                 const size = `(size ${Math.round(x2 - x1)}x${Math.round(y1 - y2)})`;
-                const continuation = <strong>(Continuation of: {table.continuationOf})</strong>
+                const continuation = <strong>(Continuation of: {table.continuationOf})</strong>;
 
                 return <div className="small-bottom-margin grey">
                     <p className="no-margin"><strong>{tableTitle} {continuationOf ? continuation : null}</strong></p>
@@ -262,6 +309,8 @@ class Index extends React.Component {
                     {x1 ? <p>Page Width x Height: <strong>{pageWidth}x{pageHeight}</strong></p> : null}
                     {prevPageTables.length > 0 ? continuationOfSelect : null}
                     <button onClick={() => this.handleSave()}>SAVE (ALT+S)</button>
+                    <button onClick={() => this.navigateToTables(false)}>Previous "table" (ArrowUp)</button>
+                    <button onClick={() => this.navigateToTables(true)}>Next "table" (ArrowDown)</button>
                 </div>
                 {listTables(tables)}
             </div>
