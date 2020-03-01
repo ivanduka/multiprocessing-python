@@ -38,7 +38,7 @@ class Index extends React.Component {
             pageHeight: null,
             continuationOf: null,
             tables: [],
-            pagesWithTables: [],
+            pagesWithTables: null,
             totalPages: 1,
         };
     }
@@ -170,16 +170,17 @@ class Index extends React.Component {
 
     navigateToTables(next) {
         const {page, pagesWithTables, totalPages} = this.state;
+        if (pagesWithTables === null) return;
 
         if (next) {
-            for (let i = page + 1; i <= totalPages; i++) {
+            for (let i = parseInt(page) + 1; i <= totalPages; i++) {
                 if (pagesWithTables[i]) {
                     IDRViewer.goToPage(i);
                     break;
                 }
             }
         } else {
-            for (let i = page - 1; i >= 1; i--) {
+            for (let i = parseInt(page) - 1; i >= 1; i--) {
                 if (pagesWithTables[i]) {
                     IDRViewer.goToPage(i);
                     break;
@@ -220,7 +221,7 @@ class Index extends React.Component {
     }
 
     changePage(page) {
-        this.setState(() => ({page: page || new URLSearchParams(window.location.search).get("page")}))
+        this.setState(() => ({page: parseInt(page) || new URLSearchParams(window.location.search).get("page")}));
     }
 
     handleSave() {
