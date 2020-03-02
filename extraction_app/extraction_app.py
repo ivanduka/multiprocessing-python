@@ -99,9 +99,9 @@ def inject_app(input_file):
                     link.decompose()
 
             scripts = ["/react.production.min.js", "/react-dom.production.min.js", "/babel.min.js"]  # path
-            for item in scripts:
+            for href in scripts:
                 script = soup.new_tag('script')
-                script['src'] = item
+                script['src'] = href
                 soup.body.append(script)
 
             script = soup.new_tag('script')
@@ -166,8 +166,8 @@ def get_data_from_db():
     password = os.getenv("DB_PASS")
     connection = create_engine(f"mysql+mysqldb://{user}:{password}@{host}/{database}")
     query = "SELECT * FROM extraction_app.pdf_tables ORDER BY fileId;"
-    df = pd.read_sql(query, con=connection)
-    return df
+    data_frame = pd.read_sql(query, con=connection)
+    return data_frame
 
 
 if __name__ == "__main__":
@@ -175,5 +175,6 @@ if __name__ == "__main__":
     # convert_pdfs()
     # inject_apps()
     data = get_data_from_db()
-    print(data)
+    for item in data.itertuples():
+        print(item)
     # extract_csv_and_html(data)

@@ -129,7 +129,7 @@ class Index extends React.Component {
         });
 
         document.addEventListener('copy', () => {
-            const tableTitle = window.getSelection().toString();
+            const tableTitle = window.getSelection().toString().trim();
             this.setState(() => ({tableTitle}));
             this.clearRectangle();
         });
