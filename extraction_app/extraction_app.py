@@ -251,10 +251,11 @@ def phase_one_preparation():
     inject_apps()
 
 
-def phase_two_extraction_and_validation:
+def phase_two_extraction_and_validation():
     populate_coordinates()
     extract_tables()
     extract_images()
+
 
 if __name__ == "__main__":
     # phase_one_preparation();
