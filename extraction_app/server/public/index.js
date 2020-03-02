@@ -1,0 +1,1 @@
+document.addEventListener("click", () => window.location.reload())

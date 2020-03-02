@@ -85,8 +85,11 @@ const index = async (req, res) => {
         else accumulator[fileId] = 1;
         return accumulator;
     }, {});
-    console.log(counts);
-    res.send(JSON.stringify(counts));
+
+    // TODO: sort by count ASC
+    const items = folders.map(folderId => ({id: folderId, count: counts[folderId] ? counts[folderId] : 0}));
+
+    res.render("index", {pageTitle: "Index of PDF files", items});
 };
 
 app.get("/", index);
