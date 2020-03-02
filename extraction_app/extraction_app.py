@@ -10,15 +10,18 @@ import pandas as pd
 from dotenv import load_dotenv
 import os
 from sqlalchemy import create_engine
+from wand.image import Image
 
-pdf_files_folder = Path("./pdf")
-pdf_files = list(pdf_files_folder.glob("*.pdf"))
-html_folder_path = Path("./server/html")
-index_files_paths = list(html_folder_path.rglob("**/index.html"))
-results_folder_path = Path("./server/results")
-images_folder_path = Path("./server/images")
 converter_path = Path("./buildvu-html-trial.jar")
 dot_env_path = Path("./server/.env")
+
+pdf_files_folder = Path("./pdf")
+html_folder_path = Path("./server/html")
+csv_tables_folder_path = Path("./server/csv_tables")
+html_tables_folder_path = Path("./server/html_tables")
+jpg_tables_folder_path = Path("./server/jpg_tables")
+pdf_files = list(pdf_files_folder.glob("*.pdf"))
+index_files_paths = list(html_folder_path.rglob("**/index.html"))
 
 load_dotenv(dotenv_path=dot_env_path)
 host = os.getenv("DB_HOST")
@@ -141,7 +144,7 @@ def inject_apps():
     print("Done injecting apps")
 
 
-def populate_pdf_coordinates(table):
+def populate_coordinate(table):
     print(f"Populating coordinates for table ID {table.uuid}")
     try:
         pdf_file_path = pdf_files_folder.joinpath(f"{table.fileId}.pdf")
@@ -166,18 +169,18 @@ def populate_pdf_coordinates(table):
     print(f"Populated coordinates for table ID {table.uuid}")
 
 
-def populate_pdfs_coordinates():
+def populate_coordinates():
     tables = get_data_from_db()
     print(f"Attempting to populate {len(tables)} tables' coordinates")
     for table in tables.itertuples():
-        populate_pdf_coordinates(table)
+        populate_coordinate(table)
     print("Done populating coordinates")
 
 
 def extract_images():
     tables = get_data_from_db()
-    print("Cleaning up the folder", images_folder_path)
-    clean_folder(images_folder_path)
+    print("Cleaning up the folder", jpg_tables_folder_path)
+    clean_folder(jpg_tables_folder_path)
     print(f"Attempting to extract {len(tables)} images")
     for table in tables.itertuples():
         extract_image(table)
@@ -185,33 +188,34 @@ def extract_images():
 
 
 def extract_image(table):
-    pdf_file_path = pdf_files_folder.joinpath(f"{table.fileId}.pdf")
-    pdf_file = PyPDF2.PdfFileReader(pdf_file_path.open("rb"))
-    page = pdf_file.getPage(table.page)
-    page.cropBox.upperLeft = (table.x1, table.y2)
-    page.cropBox.lowerRight = (table.x2, table.y2)
-    page.cropBox.upperRight = (table.x2, table.y1)
-    page.cropBox.lowerLeft = (table.x1, table.y2)
-    output = PyPDF2.PdfFileWriter()
-    output.addPage(page)
-    with images_folder_path.joinpath(f"{table.uuid}.pdf").open("wb") as file:
-        output.write(file)
+    print(f"Extracting table ID {table.uuid} to image")
+    try:
+        pdf_file_path = pdf_files_folder.joinpath(f"{table.fileId}.pdf")
+        with Image(filename=f"{pdf_file_path.resolve()}[{table.page - 1}]", resolution=300) as img:
+            left = int(table.pdfX1 * img.width / table.pdfWidth)
+            top = int((table.pdfHeight - table.pdfY1) * img.height / table.pdfHeight)
+            right = int(table.pdfX2 * img.width / table.pdfWidth)
+            bottom = int((table.pdfHeight - table.pdfY2) * img.height / table.pdfHeight)
+            img.crop(left=left, top=top, right=right, bottom=bottom)
+            img.format = "jpg"
+            img.save(filename=jpg_tables_folder_path.joinpath(f"{table.uuid}.jpg"))
+    except Exception as e:
+        print(f"==== Error extracting table ID {table.uuid}  ======")
+        print(e)
+        print(f"======================================")
+        return
+    print(f"Extracted table ID {table.uuid} to image")
 
 
 def extract_table(table):
     print(f"Extracting table ID {table.uuid}")
     try:
         pdf_file_path = pdf_files_folder.joinpath(f"{table.fileId}.pdf")
-        x1 = table.pdfX1
-        x2 = table.pdfX2
-        y1 = table.pdfY1
-        y2 = table.pdfY2
-        table_areas = [f"{x1},{y1},{x2},{y2}"]
-
+        table_areas = [f"{table.pdfX1},{table.pdfY1},{table.pdfX2},{table.pdfY2}"]
         tables = camelot.read_pdf(str(pdf_file_path), flavor="stream", table_areas=table_areas,
                                   pages=str(table.page))
-        tables[0].to_csv(results_folder_path.joinpath(f"{table.uuid}.csv"), index=False, header=False)
-        tables[0].to_html(results_folder_path.joinpath(f"{table.uuid}.html"), index=False, header=False)
+        tables[0].to_csv(csv_tables_folder_path.joinpath(f"{table.uuid}.csv"), index=False, header=False)
+        tables[0].to_html(html_tables_folder_path.joinpath(f"{table.uuid}.html"), index=False, header=False)
         camelot.plot(tables[0], kind='contour')
         plt.show()
     except Exception as e:
@@ -224,8 +228,10 @@ def extract_table(table):
 
 def extract_tables():
     tables = get_data_from_db()
-    print("Cleaning up the folder", results_folder_path)
-    clean_folder(results_folder_path)
+    print("Cleaning up the folder", csv_tables_folder_path)
+    clean_folder(csv_tables_folder_path)
+    print("Cleaning up the folder", html_tables_folder_path)
+    clean_folder(html_tables_folder_path)
     print(f"Attempting to extract {len(tables)} tables")
     for table in tables.itertuples():
         extract_table(table)
@@ -239,10 +245,17 @@ def get_data_from_db():
     return data_frame
 
 
-if __name__ == "__main__":
-    # change_pdf_titles()
-    # convert_pdfs()
-    # inject_apps()
-    # populate_pdfs_coordinates()
-    # extract_tables()
+def phase_one_preparation():
+    change_pdf_titles()
+    convert_pdfs()
+    inject_apps()
+
+
+def phase_two_extraction_and_validation:
+    populate_coordinates()
+    extract_tables()
     extract_images()
+
+if __name__ == "__main__":
+    # phase_one_preparation();
+    phase_two_extraction_and_validation()
