@@ -4,10 +4,13 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const path = require("path");
-const serveIndex = require("serve-index");
+// const serveIndex = require("serve-index");
+const glob = require("glob");
 
 const app = express();
 
+app.set("view engine", "ejs");
+app.set("views", "views");
 app.use(bodyParser.json());
 app.use(cors());
 
@@ -65,7 +68,28 @@ app.route("/api/delete").post(del);
 const htmlFilesPath = path.join(__dirname, "/html");
 app.use("/", express.static(htmlFilesPath));
 app.use("/", express.static(path.join(__dirname, "/public")));
-app.use(serveIndex(htmlFilesPath, {}));
+// app.use(serveIndex(htmlFilesPath, {}));
+
+const folders = glob.sync("./html/*").map(folderPath => {
+    const arr = folderPath.split("/");
+    return parseInt(arr[arr.length - 1]);
+});
+
+// TODO: optimize by using SQL count
+const index = async (req, res) => {
+    const {uuid} = req.body;
+    const query = `SELECT fileId FROM extraction_app.pdf_tables;`;
+    const result = await db({query, params: [uuid]});
+    const counts = result.results.reduce((accumulator, {fileId}) => {
+        if (accumulator[fileId]) accumulator[fileId] += 1;
+        else accumulator[fileId] = 1;
+        return accumulator;
+    }, {});
+    console.log(counts);
+    res.send(JSON.stringify(counts));
+};
+
+app.get("/", index);
 
 const port = 3000;
 app.listen(port, () => console.log(`Listening on port ${port}...`));
