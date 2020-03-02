@@ -207,7 +207,7 @@ class Index extends React.Component {
     }
 
     loadPrevTables() {
-        fetch(`http://localhost:3000/api/get`, {
+        fetch(`/api/get`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -228,7 +228,7 @@ class Index extends React.Component {
         const {uuid, page, tableTitle, fileId, x1, x2, y1, y2, pageHeight, pageWidth, continuationOf} = this.state;
 
         if (uuid && page && tableTitle && fileId && x1) {
-            fetch(`http://localhost:3000/api/create`, {
+            fetch(`/api/create`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -250,7 +250,7 @@ class Index extends React.Component {
 
     handleDelete(uuid) {
         if (window.confirm(`Do you really want to delete ${uuid}?`)) {
-            fetch(`http://localhost:3000/api/delete`, {
+            fetch(`/api/delete`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

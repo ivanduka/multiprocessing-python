@@ -94,5 +94,5 @@ const index = async (req, res) => {
 
 app.get("/", index);
 
-const port = 3000;
+const port = 80;
 app.listen(port, () => console.log(`Listening on port ${port}...`));
