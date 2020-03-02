@@ -19,6 +19,12 @@ results_folder_path = Path("./server/results")
 converter_path = Path("./buildvu-html-trial.jar")
 dot_env_path = Path("./server/.env")
 
+load_dotenv(dotenv_path=dot_env_path)
+host = os.getenv("DB_HOST")
+database = os.getenv("DB_DATABASE")
+user = os.getenv("DB_USER")
+password = os.getenv("DB_PASS")
+
 
 def clean_folder(folder):
     for path in Path(folder).glob("**/*"):
@@ -138,34 +144,46 @@ def extract_image():
     pass
 
 
-def extract(pdf_file_path, page, area, flavor, uuid):
-    # input_file = PyPDF2.PdfFileReader(pdf_file_path.open('rb'))
-    # size = input_file.getPage(page).mediaBox
-    # print(size.getWidth(), size.getHeight())
-    tables = camelot.read_pdf(str(pdf_file_path), flavor=flavor, flag_size=True, table_areas=[area], pages=str(page))
-    tables[0].to_csv(results_folder_path.joinpath(str(uuid) + '.csv'), index=False, header=False)
-    tables[0].to_html(results_folder_path.joinpath(str(uuid) + '.html'), index=False, header=False)
-    camelot.plot(tables[0], kind='contour')
-    plt.show()
+def extract(table):
+    print(f"Extracting table ID {table.uuid}")
+    try:
+        pdf_file_path = pdf_files_folder.joinpath(f"{table.fileId}.pdf")
+        input_file = PyPDF2.PdfFileReader(pdf_file_path.open('rb'))
+        size = input_file.getPage(table.page).mediaBox
+        pdf_width = size.getWidth()
+        pdf_height = size.getHeight()
+        x1 = table.x1 * pdf_width / table.pageWidth
+        x2 = table.x2 * pdf_width / table.pageWidth
+        y1 = table.y1 * pdf_height / table.pageHeight
+        y2 = table.y2 * pdf_height / table.pageHeight
+        table_areas = [f"{x1},{y1},{x2},{y2}"]
+
+        tables = camelot.read_pdf(str(pdf_file_path), flavor="stream", flag_size=True, table_areas=table_areas,
+                                  pages=str(table.page))
+        tables[0].to_csv(results_folder_path.joinpath(f"{table.uuid}.csv"), index=False, header=False)
+        tables[0].to_html(results_folder_path.joinpath(f"{table.uuid}.html"), index=False, header=False)
+        camelot.plot(tables[0], kind='contour')
+        plt.show()
+    except Exception as e:
+        print(f"==== Error extracting table ID {table.uuid}  ======")
+        print(e)
+        print(f"======================================")
+        return
+    print(f"Extracted table ID {table.uuid}")
 
 
-def extract_csv_and_html(inputs):
+def extract_csv_and_html(tables):
     print("Cleaning up the folder", results_folder_path)
     clean_folder(results_folder_path)
-    print(f"Attempting to extract from {len(pdf_files)} IDs")
-    for unit in inputs:
-        extract(pdf_files_folder.joinpath(f'{unit["id"]}.pdf'), unit["page"], unit["area"], "stream", unit["uuid"])
+    print(f"Attempting to extract {len(tables)} tables")
+    for table in tables.itertuples():
+        extract(table)
     print("Done extracting")
 
 
 def get_data_from_db():
-    load_dotenv(dotenv_path=dot_env_path)
-    host = os.getenv("DB_HOST")
-    database = os.getenv("DB_DATABASE")
-    user = os.getenv("DB_USER")
-    password = os.getenv("DB_PASS")
     connection = create_engine(f"mysql+mysqldb://{user}:{password}@{host}/{database}")
-    query = "SELECT * FROM extraction_app.pdf_tables ORDER BY fileId;"
+    query = "SELECT * FROM extraction_app.pdf_tables;"
     data_frame = pd.read_sql(query, con=connection)
     return data_frame
 
@@ -175,6 +193,7 @@ if __name__ == "__main__":
     # convert_pdfs()
     # inject_apps()
     data = get_data_from_db()
-    for item in data.itertuples():
-        print(item)
-    # extract_csv_and_html(data)
+    # print("Rows:", data.shape[0])
+    # for item in data.itertuples():
+    #     print(item)
+    extract_csv_and_html(data)
