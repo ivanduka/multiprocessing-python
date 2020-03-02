@@ -1,1 +1,3 @@
-document.addEventListener("click", () => window.location.reload())
+document
+  .getElementById("refresh")
+  .addEventListener("click", () => window.location.reload());

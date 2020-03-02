@@ -1,3 +1,19 @@
 body {
     margin: 20px;
 }
+
+table {
+    text-align: center;
+}
+
+thead {
+    background-color: lightgray;
+}
+
+td {
+    padding: 5px;
+}
+
+button {
+    margin-bottom: 10px;
+}
