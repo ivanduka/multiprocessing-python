@@ -67,6 +67,7 @@ def change_pdf_titles():
     for pdf_file in pdf_files:
         change_pdf_title(pdf_file)
     print("Done changing titles")
+    print()
 
 
 def convert_pdf(pdf_file_path):
@@ -91,6 +92,7 @@ def convert_pdfs():
     for pdf_file in pdf_files:
         convert_pdf(pdf_file)
     print("Done converting PDFs")
+    print()
 
 
 def inject_app(input_file):
@@ -142,6 +144,7 @@ def inject_apps():
     for index_file in index_files_paths:
         inject_app(index_file)
     print("Done injecting apps")
+    print()
 
 
 def populate_coordinate(table):
@@ -175,6 +178,7 @@ def populate_coordinates():
     for table in tables.itertuples():
         populate_coordinate(table)
     print("Done populating coordinates")
+    print()
 
 
 def extract_images():
@@ -185,6 +189,7 @@ def extract_images():
     for table in tables.itertuples():
         extract_image(table)
     print("Done extracting images")
+    print()
 
 
 def extract_image(table):
@@ -236,6 +241,7 @@ def extract_tables():
     for table in tables.itertuples():
         extract_table(table)
     print("Done extracting tables")
+    print()
 
 
 def get_data_from_db():
@@ -246,17 +252,19 @@ def get_data_from_db():
 
 
 def phase_one_preparation():
+    print()
     change_pdf_titles()
     convert_pdfs()
     inject_apps()
 
 
 def phase_two_extraction_and_validation():
+    print()
     populate_coordinates()
     extract_tables()
     extract_images()
 
 
 if __name__ == "__main__":
-    # phase_one_preparation();
+    # phase_one_preparation()
     phase_two_extraction_and_validation()
