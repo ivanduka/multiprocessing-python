@@ -90,6 +90,8 @@ app.route("/api/delete").post(del);
 const htmlFilesPath = path.join(__dirname, "/html");
 app.use("/", express.static(htmlFilesPath));
 app.use("/", express.static(path.join(__dirname, "/public")));
+app.use("/jpg_tables", express.static(path.join(__dirname, "/jpg_tables")));
+app.use("/html_tables", express.static(path.join(__dirname, "/html_tables")));
 
 const folders = glob.sync("./html/*").map(folderPath => {
   const arr = folderPath.split("/");

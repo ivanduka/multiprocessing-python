@@ -5,7 +5,8 @@ class Index extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      table: {}
+      table: {},
+      html_table: ""
     };
   }
 
@@ -16,36 +17,40 @@ class Index extends React.Component {
   loadItem() {
     fetch(`/api/getValidation`)
       .then(res => res.json())
-      .then(json => {
-        console.log(json[0]);
-        this.setState({ table: json[0] });
+      .then(([table]) => {
+        fetch(`/html_tables/${table.uuid}.html`)
+          .then(res => res.text())
+          .then(html_table => {
+            console.log(html_table);
+            this.setState({ table, html_table });
+          });
       });
   }
 
   render() {
     const { uuid, fileId, page, tableTitle } = this.state.table;
+
     return (
       <div className="container-fluid">
         <div className="row">
           <div className="col">
-            <table className="table table-bordered table-sm">
-              <tr>
-                <td>Table ID</td>
-                <td>{uuid}</td>
-              </tr>
-              <tr>
-                <td>File ID</td>
-                <td>{fileId}</td>
-              </tr>
-              <tr>
-                <td>Page</td>
-                <td>{page}</td>
-              </tr>
-              <tr>
-                <td>Title</td>
-                <td>{tableTitle}</td>
-              </tr>
-            </table>
+            <p>
+              <strong>Table ID: </strong>
+              {uuid}; <strong>File ID: </strong> {fileId};{" "}
+              <strong>Page: </strong> {page}
+            </p>
+            <p>
+              <strong>Table Title: </strong>
+              {tableTitle}
+            </p>
+          </div>
+        </div>
+        <div className="row">
+          <div className="col">
+            <img src={`/jpg_tables/${uuid}.jpg`} className="img-fluid" />
+          </div>
+          <div className="col">
+            <div dangerouslySetInnerHTML={{ __html: this.state.html_table }} />
           </div>
         </div>
       </div>
