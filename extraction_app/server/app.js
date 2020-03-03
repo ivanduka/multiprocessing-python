@@ -140,8 +140,8 @@ const validation = async (req, res) => {
 };
 
 app.get("/", index);
-app.get("/getValidation", getValidation);
-app.get("/setValidation", setValidation);
+app.get("/api/getValidation", getValidation);
+app.get("/api/setValidation", setValidation);
 app.get("/validation", validation);
 
 const port = 80;
