@@ -114,7 +114,35 @@ const index = async (req, res) => {
   res.render("index", { pageTitle: "Index of PDF files", items });
 };
 
+const getValidation = async (req, res) => {
+  try {
+    const query = `SELECT * FROM extraction_app.pdf_tables WHERE result IS NULL ORDER BY RAND() LIMIT 1;`;
+    const { results } = await db({ query }); // array
+    res.json(results);
+  } catch (e) {
+    res.json({ error: e });
+  }
+};
+
+const setValidation = async (req, res) => {
+  const { uuid, result } = req.body;
+  try {
+    const query = `UPDATE pdf_tables SET result = '${result}' WHERE uuid = ${uuid};`;
+    await db({ query });
+    res.sendStatus(200);
+  } catch (e) {
+    console.log(e);
+  }
+};
+
+const validation = async (req, res) => {
+  res.sendFile("/public/validation/validation.html", { root: __dirname });
+};
+
 app.get("/", index);
+app.get("/getValidation", getValidation);
+app.get("/setValidation", setValidation);
+app.get("/validation", validation);
 
 const port = 80;
 app.listen(port, () => console.log(`Listening on port ${port}...`));
