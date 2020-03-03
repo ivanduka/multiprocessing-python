@@ -1,0 +1,53 @@
+#root {
+    top: 45px;
+    bottom: 0;
+    left: 0;
+    right: 65%;
+    position: absolute;
+    padding: 5px;
+    border: 5px solid #666;
+    overflow-y: scroll;
+    max-width: 35%;
+    word-wrap: break-word;
+}
+
+#idrviewer {
+    top: 45px;
+    bottom: 0;
+    left: 35%;
+    right: 0;
+    position: absolute;
+}
+
+p {
+    margin: 0 0 10px;
+}
+
+.no-margin {
+    margin: 0;
+}
+
+.small-bottom-margin {
+    margin-bottom: 10px;
+}
+
+select {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.mainBlock {
+    border-bottom: 1px solid black;
+    padding-bottom: 20px;
+    margin-bottom: 5px;
+}
+
+.grey {
+    color: darkgray;
+}
+
+button {
+    margin-right: 10px;
+}

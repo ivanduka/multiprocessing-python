@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg viewBox="0 0 935 1210" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs>
+<style type="text/css"><![CDATA[
+.g0_56{
+fill: #00755C;
+}
+]]></style>
+</defs>
+<path d="M86.5,66.5H263.3V65.1H86.5v1.4Z" class="g0_56"/>
+<path d="M263.3,66.5h1.4V65.1h-1.4v1.4Z" class="g0_56"/>
+<path d="M264.7,66.5H848.8V65.1H264.7v1.4Z" class="g0_56"/>
+<path d="M85.4,120.1H263.3v-1.5H85.4v1.5Z" class="g0_56"/>
+<path d="M262.2,120.1h1.4v-1.5h-1.4v1.5Z" class="g0_56"/>
+<path d="M263.6,120.1H848.8v-1.5H263.6v1.5Z" class="g0_56"/>
+<path d="M84.3,1113.8H431.9v-.8H84.3v.8Z" class="g0_56"/>
+<path d="M431.9,1113.8h.8v-.8h-.8v.8Z" class="g0_56"/>
+<path d="M432.7,1113.8h66.5v-.8H432.7v.8Z" class="g0_56"/>
+<path d="M499.2,1113.8h.8v-.8h-.8v.8Z" class="g0_56"/>
+<path d="M499.9,1113.8H846.6v-.8H499.9v.8Z" class="g0_56"/>
+<image preserveAspectRatio="none" x="87" y="67" width="172" height="51" xlink:href="img/1.png"/>
+<image preserveAspectRatio="none" x="741" y="1125" width="106" height="41" xlink:href="img/2.png"/>
+</svg>
