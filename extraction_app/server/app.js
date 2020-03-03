@@ -129,7 +129,7 @@ const getValidation = async (req, res) => {
 const setValidation = async (req, res) => {
   const { uuid, result } = req.body;
   try {
-    const query = `UPDATE pdf_tables SET result = '${result}' WHERE uuid = ${uuid};`;
+    const query = `UPDATE pdf_tables SET result = '${result}' WHERE uuid = '${uuid}';`;
     await db({ query });
     res.sendStatus(200);
   } catch (e) {
@@ -143,7 +143,7 @@ const validation = async (req, res) => {
 
 app.get("/", index);
 app.get("/api/getValidation", getValidation);
-app.get("/api/setValidation", setValidation);
+app.post("/api/setValidation", setValidation);
 app.get("/validation", validation);
 
 const port = 80;
