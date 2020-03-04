@@ -133,5 +133,5 @@ dmypy.json
 test*.py
 report.json
 
-extraction_app/server/node_modules/
+**/node_modules/
 **/.env

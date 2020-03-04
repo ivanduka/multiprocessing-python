@@ -12,16 +12,16 @@ import os
 from sqlalchemy import create_engine
 from wand.image import Image
 
-converter_path = Path("./buildvu-html-trial.jar")
-dot_env_path = Path("./server/.env")
+converter_path = Path(r"./buildvu-html-trial.jar")
+dot_env_path = Path(r"./server/.env")
 
-pdf_files_folder = Path("./pdf")
-html_folder_path = Path("./server/html")
-csv_tables_folder_path = Path("./server/csv_tables")
-html_tables_folder_path = Path("./server/html_tables")
-jpg_tables_folder_path = Path("./server/jpg_tables")
-pdf_files = list(pdf_files_folder.glob("*.pdf"))
-index_files_paths = list(html_folder_path.rglob("**/index.html"))
+pdf_files_folder = Path(r"./pdf")
+html_folder_path = Path(r"./server/html")
+csv_tables_folder_path = Path(r"./server/csv_tables")
+html_tables_folder_path = Path(r"./server/html_tables")
+jpg_tables_folder_path = Path(r"./server/jpg_tables")
+pdf_files = list(pdf_files_folder.glob(r"*.pdf"))
+index_files_paths = list(html_folder_path.rglob(r"**/index.html"))
 
 load_dotenv(dotenv_path=dot_env_path)
 host = os.getenv("DB_HOST")
@@ -35,7 +35,22 @@ def clean_folder(folder):
         if path.is_file():
             path.unlink()
         elif path.is_dir():
-            rmtree(path)
+            rmtree(path, ignore_errors=True)
+
+
+def get_data_from_db():
+    connection = create_engine(f"mysql+mysqldb://{user}:{password}@{host}/{database}")
+    query = "SELECT * FROM extraction_app.pdf_tables;"
+    data_frame = pd.read_sql(query, con=connection)
+    return data_frame
+
+
+def change_pdf_titles():
+    print(f"Attempting to change titles in {len(pdf_files)} PDFs")
+    for pdf_file in pdf_files:
+        change_pdf_title(pdf_file)
+    print("Done changing titles")
+    print()
 
 
 def change_pdf_title(pdf_file_path):
@@ -61,12 +76,13 @@ def change_pdf_title(pdf_file_path):
         print(f"======================================")
 
 
-# Function changes Title property of a PDF to the file name (which is the pdf ID)
-def change_pdf_titles():
-    print(f"Attempting to change titles in {len(pdf_files)} PDFs")
+def convert_pdfs():
+    print("Cleaning up the folder", html_folder_path)
+    clean_folder(html_folder_path)
+    print(f"Attempting to convert {len(pdf_files)} PDFs to HTML")
     for pdf_file in pdf_files:
-        change_pdf_title(pdf_file)
-    print("Done changing titles")
+        convert_pdf(pdf_file)
+    print("Done converting PDFs")
     print()
 
 
@@ -85,18 +101,16 @@ def convert_pdf(pdf_file_path):
     print(f"Converted ID {pdf_file_path.stem}")
 
 
-def convert_pdfs():
-    print("Cleaning up the folder", html_folder_path)
-    clean_folder(html_folder_path)
-    print(f"Attempting to convert {len(pdf_files)} PDFs to HTML")
-    for pdf_file in pdf_files:
-        convert_pdf(pdf_file)
-    print("Done converting PDFs")
+def inject_apps():
+    print(f"Attempting to inject the app to {len(pdf_files)} HTML files")
+    for index_file in index_files_paths:
+        inject_app(index_file)
+    print("Done injecting apps")
     print()
 
 
 def inject_app(input_file):
-    with input_file.open() as html_file:
+    with input_file.open(encoding="UTF-8") as html_file:
         soup = BeautifulSoup(html_file, "html.parser")
         app_path = "/app.jsx"  # path
         if not soup.findAll('script', src=app_path):
@@ -139,26 +153,26 @@ def inject_app(input_file):
             print(f"{input_file} is all good!")
 
 
-def inject_apps():
-    print(f"Attempting to inject the app to {len(pdf_files)} HTML files")
-    for index_file in index_files_paths:
-        inject_app(index_file)
-    print("Done injecting apps")
+def populate_coordinates():
+    tables = get_data_from_db()
+    print(f"Attempting to populate {len(tables)} tables' coordinates")
+    for table in tables.itertuples():
+        populate_coordinate(table)
+    print("Done populating coordinates")
     print()
 
 
 def populate_coordinate(table):
-    print(f"Populating coordinates for table ID {table.uuid}")
     try:
-        pdf_file_path = pdf_files_folder.joinpath(f"{table.fileId}.pdf")
-        input_file = PyPDF2.PdfFileReader(pdf_file_path.open('rb'))
-        size = input_file.getPage(table.page).mediaBox
-        pdf_width = size.getWidth()
-        pdf_height = size.getHeight()
-        x1 = table.x1 * pdf_width / table.pageWidth
-        x2 = table.x2 * pdf_width / table.pageWidth
-        y1 = table.y1 * pdf_height / table.pageHeight
-        y2 = table.y2 * pdf_height / table.pageHeight
+        i = Image(filename=f"{pdf_files_folder.joinpath(f'{table.fileId}.pdf').resolve()}[{table.page - 1}]")
+        pdf_width = i.width
+        pdf_height = i.height
+        i.close()
+
+        x1 = int(table.x1 * pdf_width / table.pageWidth)
+        x2 = int(table.x2 * pdf_width / table.pageWidth)
+        y1 = int(table.y1 * pdf_height / table.pageHeight)
+        y2 = int(table.y2 * pdf_height / table.pageHeight)
 
         connection = create_engine(f"mysql+mysqldb://{user}:{password}@{host}/{database}")
         query = f"UPDATE extraction_app.pdf_tables SET pdfWidth={pdf_width}, pdfHeight={pdf_height}, pdfX1={x1}," \
@@ -170,65 +184,6 @@ def populate_coordinate(table):
         print(f"======================================")
         return
     print(f"Populated coordinates for table ID {table.uuid}")
-
-
-def populate_coordinates():
-    tables = get_data_from_db()
-    print(f"Attempting to populate {len(tables)} tables' coordinates")
-    for table in tables.itertuples():
-        populate_coordinate(table)
-    print("Done populating coordinates")
-    print()
-
-
-def extract_images():
-    tables = get_data_from_db()
-    print("Cleaning up the folder", jpg_tables_folder_path)
-    clean_folder(jpg_tables_folder_path)
-    print(f"Attempting to extract {len(tables)} images")
-    for table in tables.itertuples():
-        extract_image(table)
-    print("Done extracting images")
-    print()
-
-
-def extract_image(table):
-    print(f"Extracting table ID {table.uuid} to image")
-    try:
-        pdf_file_path = pdf_files_folder.joinpath(f"{table.fileId}.pdf")
-        with Image(filename=f"{pdf_file_path.resolve()}[{table.page - 1}]", resolution=300) as img:
-            left = int(table.pdfX1 * img.width / table.pdfWidth)
-            top = int((table.pdfHeight - table.pdfY1) * img.height / table.pdfHeight)
-            right = int(table.pdfX2 * img.width / table.pdfWidth)
-            bottom = int((table.pdfHeight - table.pdfY2) * img.height / table.pdfHeight)
-            img.crop(left=left, top=top, right=right, bottom=bottom)
-            img.format = "jpg"
-            img.save(filename=jpg_tables_folder_path.joinpath(f"{table.uuid}.jpg"))
-    except Exception as e:
-        print(f"==== Error extracting table ID {table.uuid}  ======")
-        print(e)
-        print(f"======================================")
-        return
-    print(f"Extracted table ID {table.uuid} to image")
-
-
-def extract_table(table):
-    print(f"Extracting table ID {table.uuid}")
-    try:
-        pdf_file_path = pdf_files_folder.joinpath(f"{table.fileId}.pdf")
-        table_areas = [f"{table.pdfX1},{table.pdfY1},{table.pdfX2},{table.pdfY2}"]
-        tables = camelot.read_pdf(str(pdf_file_path), flavor="stream", table_areas=table_areas,
-                                  pages=str(table.page))
-        tables[0].to_csv(csv_tables_folder_path.joinpath(f"{table.uuid}.csv"), index=False, header=False)
-        tables[0].to_html(html_tables_folder_path.joinpath(f"{table.uuid}.html"), index=False, header=False)
-        camelot.plot(tables[0], kind='contour')
-        plt.show()
-    except Exception as e:
-        print(f"==== Error extracting table ID {table.uuid}  ======")
-        print(e)
-        print(f"======================================")
-        return
-    print(f"Extracted table ID {table.uuid}")
 
 
 def extract_tables():
@@ -244,27 +199,64 @@ def extract_tables():
     print()
 
 
-def get_data_from_db():
-    connection = create_engine(f"mysql+mysqldb://{user}:{password}@{host}/{database}")
-    query = "SELECT * FROM extraction_app.pdf_tables;"
-    data_frame = pd.read_sql(query, con=connection)
-    return data_frame
+def extract_table(table):
+    try:
+        pdf_file_path = pdf_files_folder.joinpath(f"{table.fileId}.pdf")
+        table_areas = [f"{table.pdfX1},{table.pdfY1},{table.pdfX2},{table.pdfY2}"]
+        tables = camelot.read_pdf(str(pdf_file_path), flavor="stream", table_areas=table_areas,
+                                  pages=str(table.page))
+        csv_file_name = csv_tables_folder_path.joinpath(f"{table.uuid}.csv")
+        tables[0].to_csv(csv_file_name, index=False, header=False)
+        df = pd.read_csv(csv_file_name)
+        df.to_html(html_tables_folder_path.joinpath(f"{table.uuid}.html"), index=False, header=False, encoding="utf-8",
+                   na_rep="", escape=False)
+        fig = camelot.plot(tables[0], kind='contour')
+        fig.suptitle(table.uuid)
+        plt.show()
+    except Exception as e:
+        print(f"==== Error extracting table ID {table.uuid}  ======")
+        print(e)
+        print(f"======================================")
+        return
+    print(f"Extracted table ID {table.uuid}")
 
 
-def phase_one_preparation():
+def extract_images():
+    tables = get_data_from_db()
+    print("Cleaning up the folder", jpg_tables_folder_path)
+    clean_folder(jpg_tables_folder_path)
+    print(f"Attempting to extract {len(tables)} images")
+    for table in tables.itertuples():
+        extract_image(table)
+    print("Done extracting images")
     print()
-    change_pdf_titles()
-    convert_pdfs()
-    inject_apps()
 
 
-def phase_two_extraction_and_validation():
-    print()
-    populate_coordinates()
-    extract_tables()
-    extract_images()
+def extract_image(table):
+    try:
+        pdf_file_path = pdf_files_folder.joinpath(f"{table.fileId}.pdf")
+
+        with Image(filename=f"{pdf_file_path.resolve()}[{table.page - 1}]", resolution=600) as img:
+            left = int(table.pdfX1 * img.width / table.pdfWidth)
+            top = int((table.pdfHeight - table.pdfY1) * img.height / table.pdfHeight)
+            right = int(table.pdfX2 * img.width / table.pdfWidth)
+            bottom = int((table.pdfHeight - table.pdfY2) * img.height / table.pdfHeight)
+            img.crop(left=left, top=top, right=right, bottom=bottom)
+            img.format = "jpg"
+            img.save(filename=jpg_tables_folder_path.joinpath(f"{table.uuid}.jpg"))
+    except Exception as e:
+        print(f"==== Error extracting table ID {table.uuid}  ======")
+        print(e)
+        print(f"======================================")
+        return
+    print(f"Extracted table ID {table.uuid} to image")
 
 
 if __name__ == "__main__":
-    # phase_one_preparation()
-    phase_two_extraction_and_validation()
+    # change_pdf_titles()
+    # convert_pdfs()
+    # inject_apps()
+
+    populate_coordinates()
+    extract_tables()
+    extract_images()

@@ -146,5 +146,5 @@ app.get("/api/getValidation", getValidation);
 app.post("/api/setValidation", setValidation);
 app.get("/validation", validation);
 
-const port = 80;
+const port = 8080;
 app.listen(port, () => console.log(`Listening on port ${port}...`));
