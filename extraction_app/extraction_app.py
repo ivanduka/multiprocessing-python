@@ -4,7 +4,7 @@ import camelot
 import matplotlib.pyplot as plt
 import PyPDF2
 from pathlib import Path
-from shutil import rmtree
+import shutil
 from bs4 import BeautifulSoup
 import pandas as pd
 from dotenv import load_dotenv
@@ -31,11 +31,11 @@ password = os.getenv("DB_PASS")
 
 
 def clean_folder(folder):
-    for path in Path(folder).glob("**/*"):
+    for path in folder.glob("**/*"):
         if path.is_file():
             path.unlink()
         elif path.is_dir():
-            rmtree(path, ignore_errors=True)
+            shutil.rmtree(path, ignore_errors=True)
 
 
 def get_data_from_db():
@@ -207,9 +207,9 @@ def extract_table(table):
                                   pages=str(table.page))
         csv_file_name = csv_tables_folder_path.joinpath(f"{table.uuid}.csv")
         tables[0].to_csv(csv_file_name, index=False, header=False)
-        df = pd.read_csv(csv_file_name)
+        df = pd.read_csv(csv_file_name, na_filter=False, skip_blank_lines=False, header=None, )
         df.to_html(html_tables_folder_path.joinpath(f"{table.uuid}.html"), index=False, header=False, encoding="utf-8",
-                   na_rep="", escape=False)
+                   na_rep=" ", escape=False)
         fig = camelot.plot(tables[0], kind='contour')
         fig.suptitle(table.uuid)
         plt.show()
