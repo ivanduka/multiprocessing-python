@@ -21,7 +21,7 @@ csv_tables_folder_path = Path(r"./server/csv_tables")
 html_tables_folder_path = Path(r"./server/html_tables")
 jpg_tables_folder_path = Path(r"./server/jpg_tables")
 pdf_files = list(pdf_files_folder.glob(r"*.pdf"))
-index_files_paths = list(html_folder_path.rglob(r"**/index.html"))
+index_files_paths = r"**/index.html"
 
 load_dotenv(dotenv_path=dot_env_path)
 host = os.getenv("DB_HOST")
@@ -31,7 +31,7 @@ password = os.getenv("DB_PASS")
 
 
 def clean_folder(folder):
-    for path in folder.glob("**/*"):
+    for path in folder.glob("*"):
         if path.is_file():
             path.unlink()
         elif path.is_dir():
@@ -103,7 +103,8 @@ def convert_pdf(pdf_file_path):
 
 def inject_apps():
     print(f"Attempting to inject the app to {len(pdf_files)} HTML files")
-    for index_file in index_files_paths:
+    index_files = list(html_folder_path.rglob(index_files_paths))
+    for index_file in index_files:
         inject_app(index_file)
     print("Done injecting apps")
     print()
@@ -252,11 +253,19 @@ def extract_image(table):
     print(f"Extracted table ID {table.uuid} to image")
 
 
+def clean_all_folders():
+    clean_folder(html_folder_path)
+    clean_folder(html_tables_folder_path)
+    clean_folder(jpg_tables_folder_path)
+    clean_folder(csv_tables_folder_path)
+
+
 if __name__ == "__main__":
+    clean_all_folders()
     # change_pdf_titles()
     # convert_pdfs()
     # inject_apps()
 
-    populate_coordinates()
-    extract_tables()
-    extract_images()
+    # populate_coordinates()
+    # extract_tables()
+    # extract_images()
