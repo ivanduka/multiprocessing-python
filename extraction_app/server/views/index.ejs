@@ -1,45 +1,44 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-  <title><%= pageTitle %></title>
-  <link href="/bootstrap.min.css" rel="stylesheet" type="text/css" />
-  <link rel="stylesheet" href="/index.css" />
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+    <title><%= pageTitle %></title>
+    <link href="/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+    <link rel="stylesheet" href="/index.css"/>
 </head>
 
 <body>
-  <div class="container">
+<div class="container">
     <div class="row">
-      <div class="col m-2">
-        <button id="refresh" class="btn btn-outline-success">Refresh Data</button>
-        <a href="/validation" class="btn btn-outline-info" role="button" target="_blank">Go to validation page</a>
-      </div>
+        <div class="col m-2">
+            <button id="refresh" class="btn btn-outline-success">Refresh Data</button>
+            <a href="/validation" class="btn btn-outline-info" role="button" target="_blank">Go to validation page</a>
+        </div>
     </div>
     <div class="row">
-      <div class="col m-2">
-        <table class="table table-bordered table-striped">
-          <thead class="thead-dark">
-            <tr>
-              <th>PDF ID</th>
-              <th>Tables Identified</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% for (let item of items) { %>
-            <tr>
-              <td><a href="<%= "/" + item.id %>" target="_blank"><%= item.id %></a></td>
-              <td><%= item.count %></td>
-            </tr>
-            <% } %>
-          </tbody>
-        </table>
-      </div>
+        <div class="col m-2">
+            <table class="table table-bordered table-striped">
+                <thead class="thead-dark">
+                <tr>
+                    <th>PDF ID</th>
+                    <th>Tables Identified</th>
+                </tr>
+                </thead>
+                <tbody>
+                <% for (let item of items) { %>
+                    <tr>
+                        <td><a href="<%= "/" + item.id %>" target="_blank"><%= item.id %></a></td>
+                        <td><%= item.count %></td>
+                    </tr>
+                <% } %>
+                </tbody>
+            </table>
+        </div>
     </div>
-  </div>
+</div>
 </body>
-
 
 
 <script src="/index.js"></script>
