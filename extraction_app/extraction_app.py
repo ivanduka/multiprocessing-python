@@ -264,14 +264,15 @@ def clean_all_folders():
     clean_folder(html_tables_folder_path)
     clean_folder(jpg_tables_folder_path)
     clean_folder(csv_tables_folder_path)
+    print("All folders are cleaned")
 
 
 if __name__ == "__main__":
-    # clean_all_folders()
+    clean_all_folders()
     # change_pdf_titles()
     # convert_pdfs()
     # inject_apps()
 
     # populate_coordinates()
-    extract_tables()
+    # extract_tables()
     # extract_images()
