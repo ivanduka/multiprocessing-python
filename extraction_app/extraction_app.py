@@ -204,22 +204,28 @@ def extract_table(table):
     try:
         pdf_file_path = pdf_files_folder.joinpath(f"{table.fileId}.pdf")
         table_areas = [f"{table.pdfX1},{table.pdfY1},{table.pdfX2},{table.pdfY2}"]
-        tables = camelot.read_pdf(str(pdf_file_path), flavor="stream", table_areas=table_areas,
-                                  pages=str(table.page))
-        csv_file_name = csv_tables_folder_path.joinpath(f"{table.uuid}.csv")
-        tables[0].to_csv(csv_file_name, index=False, header=False)
-        df = pd.read_csv(csv_file_name, na_filter=False, skip_blank_lines=False, header=None, )
-        df.to_html(html_tables_folder_path.joinpath(f"{table.uuid}.html"), index=False, header=False, encoding="utf-8",
-                   na_rep=" ", escape=False)
-        fig = camelot.plot(tables[0], kind='contour')
-        fig.suptitle(table.uuid)
-        plt.show()
+        tables = camelot.read_pdf(str(pdf_file_path), table_areas=table_areas, pages=str(table.page),
+                                  strip_text='\n', flavor="stream", flag_size=True, )
+        print(f"found {len(tables)} tables with stream")
+        if len(tables) == 0:
+            tables = camelot.read_pdf(str(pdf_file_path), table_areas=table_areas, pages=str(table.page),
+                                      strip_text='\n', flavor="lattice")
+            print(f"found {len(tables)} tables with lattice")
+        if len(tables) > 0:
+            csv_file_name = csv_tables_folder_path.joinpath(f"{table.uuid}.csv")
+            tables[0].to_csv(csv_file_name, index=False, header=False)
+            df = pd.read_csv(csv_file_name, na_filter=False, skip_blank_lines=False, header=None, )
+            df.to_html(html_tables_folder_path.joinpath(f"{table.uuid}.html"), index=False, header=False,
+                       encoding="utf-8-sig", na_rep=" ")
+            # fig = camelot.plot(tables[0], kind='contour')
+            # fig.suptitle(table.uuid)
+            # plt.show()
+        else:
+            print(f">>>> No tables found for table ID {table.uuid}")
     except Exception as e:
         print(f"==== Error extracting table ID {table.uuid}  ======")
         print(e)
         print(f"======================================")
-        return
-    print(f"Extracted table ID {table.uuid}")
 
 
 def extract_images():
@@ -261,11 +267,11 @@ def clean_all_folders():
 
 
 if __name__ == "__main__":
-    clean_all_folders()
+    # clean_all_folders()
     # change_pdf_titles()
     # convert_pdfs()
     # inject_apps()
 
     # populate_coordinates()
-    # extract_tables()
+    extract_tables()
     # extract_images()
