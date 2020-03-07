@@ -148,19 +148,18 @@ def convert_pdf(file):
 
 def convert_pdfs():
     print(f"Starting to process {len(pdf_files)} PDFs")
-
     clean_folder(html_folder_path)
-    for pdf_file in pdf_files[0:2]:
-        convert_pdf(pdf_file)
+
+    # for pdf_file in pdf_files:
+    #     convert_pdf(pdf_file)
+
+    with Pool() as pool:
+        pool.map(convert_pdf, pdf_files)
 
     print(f"Done processing {len(pdf_files)} PDFs")
 
 
-def populate_db_with_PDFs():
-    pass
-
-
 if __name__ == "__main__":
     # populate_db()
-    # convert_images()
+    convert_images()
     convert_pdfs()
