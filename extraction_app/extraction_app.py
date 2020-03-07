@@ -269,7 +269,7 @@ def clean_all_folders():
 if __name__ == "__main__":
     clean_all_folders()
     # change_pdf_titles()
-    convert_pdfs()
+    # convert_pdfs()
     # inject_apps()
 
     # populate_coordinates()

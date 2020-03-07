@@ -112,7 +112,7 @@ def convert_pdf(file):
     try:
         pdf = file.open("rb")
         reader = PyPDF2.PdfFileReader(pdf)
-        pages = reader.getNumPages()
+        total_pages = reader.getNumPages()
         pdf.close()
 
         timeout = 3600  # seconds
@@ -130,7 +130,11 @@ def convert_pdf(file):
             else:
                 pages_with_word_table.append(False)
 
-        print(pages_with_word_table)
+        connection = mysql.connector.connect(user=user, password=password, host=host, database=database)
+        cursor = connection.cursor()
+        stmt = "INSERT INTO x_pdf_files (fileId, totalPages, pagesWithWordTable) VALUE (%s, %s, %s)"
+        cursor.execute(stmt, (file.stem, total_pages, json.dumps(pages_with_word_table)))
+        connection.commit()
 
         shutil.rmtree(current_file_folder, ignore_errors=True)
 
