@@ -6,8 +6,10 @@ from wand.image import Image
 import PyPDF2
 from multiprocessing import Pool
 import shutil
-from subprocess import run, TimeoutExpired, CalledProcessError
+from subprocess import run
 import json
+from sqlalchemy import text, create_engine
+import pandas as pd
 
 dot_env_path = Path(r"./server/.env")
 load_dotenv(dotenv_path=dot_env_path)
@@ -23,7 +25,7 @@ pdf_images_folder_path = Path(r"\\luxor\data\branch\Environmental Baseline Data\
 indices = Path(
     r"\\luxor\data\branch\Environmental Baseline Data\Version 4 - Final\Indices\Index 2 - PDFs for Major Projects "
     r"with ESAs.csv")
-pdf_files = list(Path(r"\\luxor\data\branch\Environmental Baseline Data\Version 4 - Final\PDF").glob("*.pdf"))
+pdf_files = list(Path(r"\\luxor\data\branch\Environmental Baseline Data\Web\PDF").glob("*.pdf"))[:]
 
 
 def clean_folder(folder):
@@ -42,7 +44,8 @@ def populate_db_with_tables():
         connection.commit()
         print("Done deleting the table content")
 
-        stmt = "INSERT INTO x_validation (project, csvName, fileId, tableName, page, tableNumber) VALUES (%s, %s, %s, %s, %s, %s)"
+        stmt = "INSERT INTO x_validation (project, csvName, fileId, tableName, page, tableNumber)" + \
+               " VALUES (%s, %s, %s, %s, %s, %s)"
         total_rows = 0
 
         for project in csv_tables_folder_path.glob("*"):
@@ -105,7 +108,7 @@ def convert_images():
     with Pool() as pool:
         pool.map(convert_image, pdf_files)
 
-    print(f"Done processing {len(pdf_files)} PDFs")
+    print(f"Done extracting images from {len(pdf_files)} PDFs")
 
 
 def convert_pdf(file):
@@ -116,7 +119,7 @@ def convert_pdf(file):
         pdf.close()
 
         timeout = 3600  # seconds
-        arguments = ['java', '-jar', str(converter_path.resolve()), str(file.resolve()),
+        arguments = ['java', "-Xmx100000M", "-d64", '-jar', str(converter_path.resolve()), str(file.resolve()),
                      str(html_folder_path.resolve())]
         run(arguments, timeout=timeout)
 
@@ -156,10 +159,17 @@ def convert_pdfs():
     with Pool() as pool:
         pool.map(convert_pdf, pdf_files)
 
-    print(f"Done processing {len(pdf_files)} PDFs")
+    print(f"Done converting {len(pdf_files)} PDFs")
 
 
 if __name__ == "__main__":
-    # populate_db()
-    convert_images()
-    convert_pdfs()
+    populate_db_with_tables()
+    # convert_pdfs()
+    # convert_images()
+    conn = create_engine(f"mysql+mysqldb://{user}:{password}@{host}/{database}")
+    statement = text("SELECT * FROM extraction_app.pdf_tables WHERE pageWidth = :x;")
+    df = pd.read_sql(statement, conn, params={"x": 1141})
+    print(df.head())
+
+    f = Path(r"\\luxor\data\branch\Environmental Baseline Data\Web\PDF\3762514.pdf")
+    convert_pdf(f)

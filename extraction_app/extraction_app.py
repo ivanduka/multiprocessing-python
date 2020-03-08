@@ -87,7 +87,7 @@ def convert_pdfs():
 
 def convert_pdf(pdf_file_path):
     timeout = 3600  # seconds
-    arguments = ['java', '-jar', str(converter_path.resolve()), str(pdf_file_path.resolve()),
+    arguments = ['java', "-Xmx10000M", "-d64", '-jar', str(converter_path.resolve()), str(pdf_file_path.resolve()),
                  str(html_folder_path.resolve())]
 
     try:

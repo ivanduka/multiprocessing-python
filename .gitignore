@@ -135,3 +135,7 @@ report.json
 
 **/node_modules/
 **/.env
+/extraction_app/server/html/**/*
+/extraction_app/server/html_tables/**/*
+/extraction_app/server/jpg_tables/**/*
+/extraction_app/server/csv_tables/**/*
