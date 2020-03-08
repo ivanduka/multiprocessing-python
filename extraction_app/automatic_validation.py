@@ -17,6 +17,7 @@ host = os.getenv("DB_HOST")
 database = os.getenv("DB_DATABASE")
 user = os.getenv("DB_USER")
 password = os.getenv("DB_PASS")
+engine = create_engine(f"mysql+mysqldb://{user}:{password}@{host}/{database}")
 
 converter_path = Path(r"./buildvu-html-trial.jar")
 html_folder_path = Path(r"\\luxor\data\branch\Environmental Baseline Data\Web\html")
@@ -36,15 +37,55 @@ def clean_folder(folder):
             shutil.rmtree(path, ignore_errors=True)
 
 
-def populate_db_with_tables():
+def clear_table(table):
+    print()
     try:
+        with engine.connect() as conn:
+            statement = f"DELETE FROM {table}"
+            result = conn.execute(statement).rowcount
+        print(f"Deleted ALL {result} rows for {table}")
+    except Exception as e:
+        print("#####################################")
+        print(f"Error deleting all table rows for {table}: {e}")
+        print("#####################################")
+
+
+def get_pdfs():
+    clear_table("x_pdfs")
+    print()
+    print(f"Starting to insert {len(pdf_files)} PDFs to DB")
+
+    # for pdf_file in pdf_files:
+    #     get_pdf(pdf_file)
+
+    with Pool() as pool:
+        pool.map(get_pdf, pdf_files)
+
+    print(f"Done inserting {len(pdf_files)} PDFs")
+
+
+def get_pdf(pdf):
+    try:
+        with engine.connect() as conn:
+            statement = text(
+                "INSERT INTO x_pdfs (fileId) VALUE (:file_id)")
+            conn.execute(statement, {"file_id": pdf.stem}).rowcount
+    except Exception as e:
+        print("#####################################")
+        print(f"Error inserting PDF to DB for {pdf.stem}: {e}")
+        print("#####################################")
+
+
+def get_extracted_csvs():
+    try:
+        print("Trying to populate the DB with the extracted tables")
         connection = mysql.connector.connect(user=user, password=password, host=host, database=database)
         cursor = connection.cursor()
-        cursor.execute("DELETE FROM x_validation")
+        cursor.execute("DELETE FROM x_csvs")
         connection.commit()
         print("Done deleting the table content")
 
-        stmt = "INSERT INTO x_validation (project, csvName, fileId, tableName, page, tableNumber)" + \
+        stmt = "INSERT INTO x_csvs (project, csvName, fileId, tableName, page, tableNumber)" + \
                " VALUES (%s, %s, %s, %s, %s, %s)"
         total_rows = 0
 
@@ -89,6 +130,15 @@ def convert_image(pdf_file_path):
             with Image(filename=f"{pdf_file_path.resolve()}[{page}]", resolution=200) as img:
                 img.format = "jpg"
                 img.save(filename=pdf_file_image_folder.joinpath(f"{page + 1}.jpg"))
+
+        engine = create_engine(f"mysql+mysqldb://{user}:{password}@{host}/{database}")
+        with engine.connect() as conn:
+            statement = text(
+                "INSERT INTO x_pdfs (fileId, totalPages, pagesWithWordTable)" +
+                " VALUE (:file_id, :total_pages, :pages_with_word_table)")
+            result = conn.execute(statement, {"file_id": 62515, "total_pages": 24, "pages_with_word_table": "[]"})
+            print(result.rowcount)
+
         print(f"Converted all {pages} images for {pdf_file_path}")
     except Exception as e:
         print("#####################################")
@@ -127,15 +177,17 @@ def convert_pdf(file):
         search_json = json.load(current_file_folder.joinpath("search.json").open(encoding="utf8"))
         pages_with_word_table = [None]
 
+        sum = 0
         for page in search_json:
             if "table" in page.lower():
                 pages_with_word_table.append(True)
+                sum += 1
             else:
                 pages_with_word_table.append(False)
 
         connection = mysql.connector.connect(user=user, password=password, host=host, database=database)
         cursor = connection.cursor()
-        stmt = "INSERT INTO x_pdf_files (fileId, totalPages, pagesWithWordTable) VALUE (%s, %s, %s)"
+        stmt = "INSERT INTO x_pdfs (fileId, totalPages, pagesWithWordTable) VALUE (%s, %s, %s)"
         cursor.execute(stmt, (file.stem, total_pages, json.dumps(pages_with_word_table)))
         connection.commit()
 
@@ -163,13 +215,7 @@ def convert_pdfs():
 
 
 if __name__ == "__main__":
-    populate_db_with_tables()
+    get_pdfs()
+    # get_extracted_csvs()
     # convert_pdfs()
     # convert_images()
-    conn = create_engine(f"mysql+mysqldb://{user}:{password}@{host}/{database}")
-    statement = text("SELECT * FROM extraction_app.pdf_tables WHERE pageWidth = :x;")
-    df = pd.read_sql(statement, conn, params={"x": 1141})
-    print(df.head())
-
-    f = Path(r"\\luxor\data\branch\Environmental Baseline Data\Web\PDF\3762514.pdf")
-    convert_pdf(f)
