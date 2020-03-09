@@ -26,7 +26,8 @@ pdf_images_folder_path = Path(r"\\luxor\data\branch\Environmental Baseline Data\
 indices = Path(
     r"\\luxor\data\branch\Environmental Baseline Data\Version 4 - Final\Indices\Index 2 - PDFs for Major Projects "
     r"with ESAs.csv")
-pdf_files = list(Path(r"\\luxor\data\branch\Environmental Baseline Data\Web\PDF").glob("*.pdf"))[:]
+pdf_files_folder = Path(r"\\luxor\data\branch\Environmental Baseline Data\Web\PDF")
+pdf_files = list(pdf_files_folder.glob("*.pdf"))[:]
 
 
 def clean_folder(folder):
@@ -35,6 +36,12 @@ def clean_folder(folder):
             path.unlink()
         elif path.is_dir():
             shutil.rmtree(path, ignore_errors=True)
+
+
+def get_table(table):
+    statement = f"SELECT * FROM {table};"
+    df = pd.read_sql(statement, engine)
+    return df
 
 
 def clear_table(table):
@@ -125,10 +132,41 @@ def get_csv(project):
         print("#####################################")
 
 
+def get_pages_numbers():
+    print()
+    df = get_table("x_pdfs")
+    pdfs = df["fileId"]
+    print(f"Starting to update {len(pdfs)} PDF pages numbers in DB...")
+
+    # for pdf in pdfs:
+    #     get_pages_number(pdf)
+
+    with Pool() as pool:
+        pool.map(get_pages_number, pdfs)
+
+    print(f"Done {len(pdfs)} items")
+
+
+def get_pages_number(file_id):
+    try:
+        pdf = pdf_files_folder.joinpath(f"{file_id}.pdf").open("rb")
+        reader = PyPDF2.PdfFileReader(pdf)
+        total_pages = reader.getNumPages()
+        pdf.close()
+
+        with engine.connect() as conn:
+            stmt = text("UPDATE x_pdfs SET totalPages = :total_pages WHERE fileId = :file_id;")
+            row_count = conn.execute(stmt, {"total_pages": total_pages, "file_id": file_id}).rowcount
+    except Exception as e:
+        print("#####################################")
+        print(f"Failed to process {file_id}: {e}")
+        print("#####################################")
+
+
 def convert_image(pdf_file_path):
     try:
-        pdf_file_image_folder = pdf_images_folder_path.joinpath(pdf_file_path.stem)
-        pdf_file_image_folder.mkdir()
+        pdf_file_images_folder = pdf_images_folder_path.joinpath(pdf_file_path.stem)
+        pdf_file_images_folder.mkdir()
 
         pdf = pdf_file_path.open("rb")
         reader = PyPDF2.PdfFileReader(pdf)
@@ -138,7 +176,7 @@ def convert_image(pdf_file_path):
         for page in range(0, pages):
             with Image(filename=f"{pdf_file_path.resolve()}[{page}]", resolution=200) as img:
                 img.format = "jpg"
-                img.save(filename=pdf_file_image_folder.joinpath(f"{page + 1}.jpg"))
+                img.save(filename=pdf_file_images_folder.joinpath(f"{page + 1}.jpg"))
 
         engine = create_engine(f"mysql+mysqldb://{user}:{password}@{host}/{database}")
         with engine.connect() as conn:
@@ -157,6 +195,7 @@ def convert_image(pdf_file_path):
 
 
 def convert_images():
+    print()
     print(f"Cleaning up the folder {pdf_images_folder_path}")
     clean_folder(pdf_images_folder_path)
     print(f"Starting to process {len(pdf_files)} PDFs")
@@ -226,3 +265,4 @@ def convert_pdfs():
 if __name__ == "__main__":
     # get_pdfs()
     # get_csvs()
+    get_pages_numbers()
