@@ -163,50 +163,47 @@ def get_pages_number(file_id):
         print("#####################################")
 
 
-def convert_image(pdf_file_path):
+def extract_images_from_pdfs():
+    print()
+    print("Getting the list of PDFs from DB...")
+    print()
+    df = get_table("x_pdfs")
+    pdfs = list(df.itertuples())
+    print(f"Cleaning up the folder {pdf_images_folder_path}...")
+    clean_folder(pdf_images_folder_path)
+    print()
+    print(f"Starting to extract images from {len(pdfs)} PDFs in DB...")
+
+    for pdf_file in pdfs:
+        extract_image_from_pdf(pdf_file)
+
+    # with Pool() as pool:
+    #    pool.map(get_image, pdfs)
+
+    print(f"Done {len(pdfs)} items")
+
+
+def extract_image_from_pdf(pdf):
     try:
+        pages = pdf.totalPages
+        file_id = pdf.fileId
+        pdf_file_path = pdf_files_folder.joinpath(f"{file_id}.pdf")
         pdf_file_images_folder = pdf_images_folder_path.joinpath(pdf_file_path.stem)
         pdf_file_images_folder.mkdir()
-
-        pdf = pdf_file_path.open("rb")
-        reader = PyPDF2.PdfFileReader(pdf)
-        pages = reader.getNumPages()
-        pdf.close()
 
         for page in range(0, pages):
             with Image(filename=f"{pdf_file_path.resolve()}[{page}]", resolution=200) as img:
                 img.format = "jpg"
                 img.save(filename=pdf_file_images_folder.joinpath(f"{page + 1}.jpg"))
 
-        engine = create_engine(f"mysql+mysqldb://{user}:{password}@{host}/{database}")
         with engine.connect() as conn:
-            statement = text(
-                "INSERT INTO x_pdfs (fileId, totalPages, pagesWithWordTable)" +
-                " VALUE (:file_id, :total_pages, :pages_with_word_table)")
-            result = conn.execute(statement, {"file_id": 62515, "total_pages": 24, "pages_with_word_table": "[]"})
-            print(result.rowcount)
-
-        print(f"Converted all {pages} images for {pdf_file_path}")
+            stmt = text("UPDATE x_pdfs SET extractedImages = :pages WHERE fileId = :file_id;")
+            conn.execute(stmt, {"pages": pages, "file_id": file_id})
+        print(f"Extracted {pages} images from PDF {file_id}")
     except Exception as e:
         print("#####################################")
-        print(f"Failed to process PDF {pdf_file_path}:")
-        print(e)
+        print(f"Failed to process {pdf}: {e}")
         print("#####################################")
-
-
-def convert_images():
-    print()
-    print(f"Cleaning up the folder {pdf_images_folder_path}")
-    clean_folder(pdf_images_folder_path)
-    print(f"Starting to process {len(pdf_files)} PDFs")
-
-    # for pdf_file in pdf_files:
-    #     convert_image(pdf_file)
-
-    with Pool() as pool:
-        pool.map(convert_image, pdf_files)
-
-    print(f"Done extracting images from {len(pdf_files)} PDFs")
 
 
 def convert_pdf(file):
@@ -265,4 +262,5 @@ def convert_pdfs():
 if __name__ == "__main__":
     # get_pdfs()
     # get_csvs()
-    get_pages_numbers()
+    # get_pages_numbers()
+    extract_images_from_pdfs()
