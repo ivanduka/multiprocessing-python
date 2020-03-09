@@ -191,7 +191,7 @@ def extract_image_from_pdf(pdf):
 
         pdf_file_path = pdf_files_folder.joinpath(f"{file_id}.pdf")
         pdf_file_images_folder = pdf_images_folder_path.joinpath(pdf_file_path.stem)
-        if pdf_images_folder_path.exists():
+        if pdf_file_images_folder.exists():
             clean_folder(pdf_images_folder_path)
         else:
             pdf_file_images_folder.mkdir()
