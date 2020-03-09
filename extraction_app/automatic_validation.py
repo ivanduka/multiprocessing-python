@@ -17,7 +17,7 @@ host = os.getenv("DB_HOST")
 database = os.getenv("DB_DATABASE")
 user = os.getenv("DB_USER")
 password = os.getenv("DB_PASS")
-engine = create_engine(f"mysql+mysqldb://{user}:{password}@{host}/{database}")
+engine = create_engine(f"mysql+mysqldb://{user}:{password}@{host}/{database}?charset=utf8")
 
 converter_path = Path(r"./buildvu-html-trial.jar")
 html_folder_path = Path(r"\\luxor\data\branch\Environmental Baseline Data\Web\html")
@@ -39,21 +39,22 @@ def clean_folder(folder):
 
 def clear_table(table):
     print()
+    print(f"Starting to clear {table}...")
     try:
         with engine.connect() as conn:
-            statement = f"DELETE FROM {table}"
+            statement = f'DELETE FROM {table}'
             result = conn.execute(statement).rowcount
-        print(f"Deleted ALL {result} rows for {table}")
     except Exception as e:
         print("#####################################")
         print(f"Error deleting all table rows for {table}: {e}")
         print("#####################################")
+    print(f"Deleted ALL {result} rows for {table}")
 
 
 def get_pdfs():
     clear_table("x_pdfs")
     print()
-    print(f"Starting to insert {len(pdf_files)} PDFs to DB")
+    print(f"Starting to insert {len(pdf_files)} PDFs to DB...")
 
     # for pdf_file in pdf_files:
     #     get_pdf(pdf_file)
@@ -69,50 +70,58 @@ def get_pdf(pdf):
         with engine.connect() as conn:
             statement = text(
                 "INSERT INTO x_pdfs (fileId) VALUE (:file_id)")
-            conn.execute(statement, {"file_id": pdf.stem}).rowcount
+            conn.execute(statement, {"file_id": pdf.stem})
     except Exception as e:
         print("#####################################")
         print(f"Error inserting PDF to DB for {pdf.stem}: {e}")
         print("#####################################")
 
 
-def get_extracted_csvs():
+def get_csvs():
+    clear_table("x_csvs")
+    print()
+    project_folders = list(csv_tables_folder_path.glob("*"))
+    print(f"Starting to insert {len(project_folders)} projects to DB...")
+
+    # for project_folder in project_folders:
+    #     get_csv(project_folder)
+
+    with Pool() as pool:
+        pool.map(get_csv, project_folders)
+
+    print(f"Done inserting {len(project_folders)} projects")
+
+
+def get_csv(project):
     try:
-        print("Trying to populate the DB with the extracted tables")
-        connection = mysql.connector.connect(user=user, password=password, host=host, database=database)
-        cursor = connection.cursor()
-        cursor.execute("DELETE FROM x_csvs")
-        connection.commit()
-        print("Done deleting the table content")
+        project_name = project.stem
+        csvs = list(project.glob("*.csv"))
 
-        stmt = "INSERT INTO x_csvs (project, csvName, fileId, tableName, page, tableNumber)" + \
-               " VALUES (%s, %s, %s, %s, %s, %s)"
-        total_rows = 0
+        if len(csvs) < 1:
+            print(f"No CSVs found for {project_name}")
+            return
 
-        for project in csv_tables_folder_path.glob("*"):
-            data = []
-            project_name = project.stem
-            for csv in project.glob("*.csv"):
-                csv_name = csv.stem
-                s = csv_name.split("_")
-                file_id = s[0]
-                table_number = s[-1]
-                page_number = s[-2]
-                if len(s) > 3:
-                    table_name = s[1]
-                else:
-                    table_name = ""
-                data.append((project_name, csv_name, file_id, table_name, page_number, table_number))
-            cursor.executemany(stmt, data)
-            total_rows += len(data)
+        inserts = []
+        for csv in csvs:
+            csv_name = csv.stem
+            strings_list = csv_name.split("_")
+            file_id = int(strings_list[0])
+            table_number = int(strings_list[-1])
+            page_number = int(strings_list[-2])
+            table_name = strings_list[1] if len(strings_list) > 3 else ""
+            inserts.append(
+                {"project_name": project_name, "csv_name": csv_name, "file_id": file_id, "table_name": table_name,
+                 "page_number": page_number, "table_number": table_number})
 
-        connection.commit()
-        connection.close()
-        print(f"Done inserting {total_rows} rows")
+        with engine.connect() as conn:
+            stmt = text("INSERT INTO x_csvs (project, csvName, fileId, tableName, page, tableNumber)" +
+                        " VALUES (:project_name, :csv_name, :file_id, :table_name, :page_number, :table_number)")
+            row_count = conn.execute(stmt, inserts).rowcount
+        print(f"Inserted {row_count} rows for project {project_name}")
+
     except Exception as e:
         print("#####################################")
-        print("Error populating the DB:")
-        print(e)
+        print(f"Error inserting CSVs to DB for {project.stem}: {e}")
         print("#####################################")
 
 
@@ -177,11 +186,11 @@ def convert_pdf(file):
         search_json = json.load(current_file_folder.joinpath("search.json").open(encoding="utf8"))
         pages_with_word_table = [None]
 
-        sum = 0
+        words_sum = 0
         for page in search_json:
             if "table" in page.lower():
                 pages_with_word_table.append(True)
-                sum += 1
+                words_sum += 1
             else:
                 pages_with_word_table.append(False)
 
@@ -215,7 +224,5 @@ def convert_pdfs():
 
 
 if __name__ == "__main__":
-    get_pdfs()
-    # get_extracted_csvs()
-    # convert_pdfs()
-    # convert_images()
+    # get_pdfs()
+    # get_csvs()
