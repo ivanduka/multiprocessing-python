@@ -156,7 +156,7 @@ def get_pages_number(file_id):
 
         with engine.connect() as conn:
             stmt = text("UPDATE x_pdfs SET totalPages = :total_pages WHERE fileId = :file_id;")
-            row_count = conn.execute(stmt, {"total_pages": total_pages, "file_id": file_id}).rowcount
+            conn.execute(stmt, {"total_pages": total_pages, "file_id": file_id})
     except Exception as e:
         print("#####################################")
         print(f"Failed to process {file_id}: {e}")
