@@ -167,17 +167,14 @@ def extract_images_from_pdfs():
     print()
     print("Getting the list of PDFs from DB...")
     df = get_table("x_pdfs")
-    pdfs = list(df.itertuples())
-    print()
-    print(f"Cleaning up the folder {pdf_images_folder_path}...")
-    clean_folder(pdf_images_folder_path)
+    pdfs = pdfs = df.to_dict("records")
     print()
     print(f"Starting to extract images from {len(pdfs)} PDFs in DB...")
 
     # for pdf_file in pdfs:
     #     extract_image_from_pdf(pdf_file)
 
-    with Pool() as pool:
+    with Pool(2) as pool:
         pool.map(extract_image_from_pdf, pdfs)
 
     print(f"Done {len(pdfs)} items")
@@ -185,16 +182,19 @@ def extract_images_from_pdfs():
 
 def extract_image_from_pdf(pdf):
     try:
-        file_id = pdf.fileId
+        file_id = pdf["fileId"]
+        pages = pdf["totalPages"]
 
-        if not pd.isna(pdf.extractedImages):
+        if not pd.isna(pdf["extractedImages"]):
             print(f"File {file_id} is already processed")
             return
 
-        pages = pdf.totalPages
         pdf_file_path = pdf_files_folder.joinpath(f"{file_id}.pdf")
         pdf_file_images_folder = pdf_images_folder_path.joinpath(pdf_file_path.stem)
-        pdf_file_images_folder.mkdir()
+        if pdf_images_folder_path.exists():
+            clean_folder(pdf_images_folder_path)
+        else:
+            pdf_file_images_folder.mkdir()
 
         for page in range(0, pages):
             with Image(filename=f"{pdf_file_path.resolve()}[{page}]", resolution=200) as img:
@@ -207,7 +207,7 @@ def extract_image_from_pdf(pdf):
         print(f"Extracted {pages} images from PDF {file_id}")
     except Exception as e:
         print("#####################################")
-        print(f"Failed to process {pdf.fileId}: {e}")
+        print(f"Failed to process {pdf['fileId']}: {e}")
         print("#####################################")
 
 
@@ -215,26 +215,26 @@ def get_words_table_from_pdfs():
     print()
     print("Getting the list of PDFs for extraction from DB...")
     df = get_table("x_pdfs")
-    pdfs = list(df.itertuples())
+    pdfs = df.to_dict("records")
     print()
     print(f"Cleaning up the folder {html_folder_path}...")
     clean_folder(html_folder_path)
     print()
     print(f"Starting to extract images from {len(pdfs)} PDFs in DB...")
 
-    for pdf_file in pdfs:
-        get_words_table_from_pdf(pdf_file)
+    # for pdf_file in pdfs:
+    #     get_words_table_from_pdf(pdf_file)
 
-    # with Pool() as pool:
-    #     pool.map(get_words_table_from_pdf, pdfs)
+    with Pool(2) as pool:
+        pool.map(get_words_table_from_pdf, pdfs)
 
     print(f"Done {len(pdfs)} items")
 
 
 def get_words_table_from_pdf(pdf):
     try:
-        file_id = pdf.fileId
-        pages_with_word_table = pdf.totalPagesWithWordTable
+        file_id = pdf["fileId"]
+        pages_with_word_table = pdf["totalPagesWithWordTable"]
 
         if not pd.isna(pages_with_word_table):
             print(f"File {file_id} is already processed")
@@ -270,7 +270,7 @@ def get_words_table_from_pdf(pdf):
 
     except Exception as e:
         print("#####################################")
-        print(f"Failed to process {pdf.fileId}: {e}")
+        print(f"Failed to process {pdf['fileId']}: {e}")
         print("#####################################")
 
 
@@ -278,5 +278,5 @@ if __name__ == "__main__":
     # get_pdfs()
     # get_csvs()
     # get_pages_numbers()
-    # extract_images_from_pdfs()
-    get_words_table_from_pdfs()
+    extract_images_from_pdfs()
+    # get_words_table_from_pdfs()
