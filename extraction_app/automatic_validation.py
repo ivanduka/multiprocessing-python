@@ -174,7 +174,7 @@ def extract_images_from_pdfs():
     # for pdf_file in pdfs:
     #     extract_image_from_pdf(pdf_file)
 
-    with Pool(2) as pool:
+    with Pool(12) as pool:
         pool.map(extract_image_from_pdf, pdfs)
 
     print(f"Done {len(pdfs)} items")
@@ -225,7 +225,7 @@ def get_words_table_from_pdfs():
     # for pdf_file in pdfs:
     #     get_words_table_from_pdf(pdf_file)
 
-    with Pool(2) as pool:
+    with Pool(12) as pool:
         pool.map(get_words_table_from_pdf, pdfs)
 
     print(f"Done {len(pdfs)} items")
@@ -275,8 +275,8 @@ def get_words_table_from_pdf(pdf):
 
 
 if __name__ == "__main__":
-    # get_pdfs()
-    # get_csvs()
-    # get_pages_numbers()
+    get_pdfs()
+    get_csvs()
+    get_pages_numbers()
     extract_images_from_pdfs()
-    # get_words_table_from_pdfs()
+    get_words_table_from_pdfs()
