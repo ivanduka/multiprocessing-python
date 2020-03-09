@@ -93,7 +93,7 @@ def get_csvs():
     # for project_folder in project_folders:
     #     get_csv(project_folder)
 
-    with Pool() as pool:
+    with Pool(12) as pool:
         pool.map(get_csv, project_folders)
 
     print(f"Done inserting {len(project_folders)} projects")
@@ -141,7 +141,7 @@ def get_pages_numbers():
     # for pdf in pdfs:
     #     get_pages_number(pdf)
 
-    with Pool() as pool:
+    with Pool(12) as pool:
         pool.map(get_pages_number, pdfs)
 
     print(f"Done {len(pdfs)} items")
@@ -167,7 +167,7 @@ def extract_images_from_pdfs():
     print()
     print("Getting the list of PDFs from DB...")
     df = get_table("x_pdfs")
-    pdfs = pdfs = df.to_dict("records")
+    pdfs = df.to_dict("records")
     print()
     print(f"Starting to extract images from {len(pdfs)} PDFs in DB...")
 
