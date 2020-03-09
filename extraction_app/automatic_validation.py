@@ -166,27 +166,32 @@ def get_pages_number(file_id):
 def extract_images_from_pdfs():
     print()
     print("Getting the list of PDFs from DB...")
-    print()
     df = get_table("x_pdfs")
     pdfs = list(df.itertuples())
+    print()
     print(f"Cleaning up the folder {pdf_images_folder_path}...")
     clean_folder(pdf_images_folder_path)
     print()
     print(f"Starting to extract images from {len(pdfs)} PDFs in DB...")
 
-    for pdf_file in pdfs:
-        extract_image_from_pdf(pdf_file)
+    # for pdf_file in pdfs:
+    #     extract_image_from_pdf(pdf_file)
 
-    # with Pool() as pool:
-    #    pool.map(get_image, pdfs)
+    with Pool() as pool:
+        pool.map(extract_image_from_pdf, pdfs)
 
     print(f"Done {len(pdfs)} items")
 
 
 def extract_image_from_pdf(pdf):
     try:
-        pages = pdf.totalPages
         file_id = pdf.fileId
+
+        if not pd.isna(pdf.extractedImages):
+            print(f"File {file_id} is already processed")
+            return
+
+        pages = pdf.totalPages
         pdf_file_path = pdf_files_folder.joinpath(f"{file_id}.pdf")
         pdf_file_images_folder = pdf_images_folder_path.joinpath(pdf_file_path.stem)
         pdf_file_images_folder.mkdir()
@@ -202,23 +207,47 @@ def extract_image_from_pdf(pdf):
         print(f"Extracted {pages} images from PDF {file_id}")
     except Exception as e:
         print("#####################################")
-        print(f"Failed to process {pdf}: {e}")
+        print(f"Failed to process {pdf.fileId}: {e}")
         print("#####################################")
 
 
-def convert_pdf(file):
+def get_words_table_from_pdfs():
+    print()
+    print("Getting the list of PDFs for extraction from DB...")
+    df = get_table("x_pdfs")
+    pdfs = list(df.itertuples())
+    print()
+    print(f"Cleaning up the folder {html_folder_path}...")
+    clean_folder(html_folder_path)
+    print()
+    print(f"Starting to extract images from {len(pdfs)} PDFs in DB...")
+
+    for pdf_file in pdfs:
+        get_words_table_from_pdf(pdf_file)
+
+    # with Pool() as pool:
+    #     pool.map(get_words_table_from_pdf, pdfs)
+
+    print(f"Done {len(pdfs)} items")
+
+
+def get_words_table_from_pdf(pdf):
     try:
-        pdf = file.open("rb")
-        reader = PyPDF2.PdfFileReader(pdf)
-        total_pages = reader.getNumPages()
-        pdf.close()
+        file_id = pdf.fileId
+        pages_with_word_table = pdf.totalPagesWithWordTable
+
+        if not pd.isna(pages_with_word_table):
+            print(f"File {file_id} is already processed")
+            return
+
+        file = pdf_files_folder.joinpath(f"{file_id}.pdf")
 
         timeout = 3600  # seconds
         arguments = ['java', "-Xmx100000M", "-d64", '-jar', str(converter_path.resolve()), str(file.resolve()),
                      str(html_folder_path.resolve())]
         run(arguments, timeout=timeout)
 
-        current_file_folder = html_folder_path.joinpath(file.stem)
+        current_file_folder = html_folder_path.joinpath(str(file_id))
         search_json = json.load(current_file_folder.joinpath("search.json").open(encoding="utf8"))
         pages_with_word_table = [None]
 
@@ -230,37 +259,24 @@ def convert_pdf(file):
             else:
                 pages_with_word_table.append(False)
 
-        connection = mysql.connector.connect(user=user, password=password, host=host, database=database)
-        cursor = connection.cursor()
-        stmt = "INSERT INTO x_pdfs (fileId, totalPages, pagesWithWordTable) VALUE (%s, %s, %s)"
-        cursor.execute(stmt, (file.stem, total_pages, json.dumps(pages_with_word_table)))
-        connection.commit()
+        with engine.connect() as conn:
+            stmt = text(
+                "UPDATE x_pdfs SET totalPagesWithWordTable = :words_sum, pagesWithWordTable = :json" +
+                " WHERE fileId = :file_id;")
+            conn.execute(stmt, {"words_sum": words_sum, "file_id": file_id, "json": json.dumps(pages_with_word_table)})
 
         shutil.rmtree(current_file_folder, ignore_errors=True)
+        print(f"Converted ID {file_id}")
 
-        print(f"Converted ID {file.stem}")
     except Exception as e:
         print("#####################################")
-        print(f"Failed to process PDF {file}:")
-        print(e)
+        print(f"Failed to process {pdf.fileId}: {e}")
         print("#####################################")
-
-
-def convert_pdfs():
-    print(f"Starting to process {len(pdf_files)} PDFs")
-    clean_folder(html_folder_path)
-
-    # for pdf_file in pdf_files:
-    #     convert_pdf(pdf_file)
-
-    with Pool() as pool:
-        pool.map(convert_pdf, pdf_files)
-
-    print(f"Done converting {len(pdf_files)} PDFs")
 
 
 if __name__ == "__main__":
     # get_pdfs()
     # get_csvs()
     # get_pages_numbers()
-    extract_images_from_pdfs()
+    # extract_images_from_pdfs()
+    get_words_table_from_pdfs()
