@@ -53,7 +53,7 @@ class Index extends React.Component {
           <div className="col m-2">
             <button
               id="refresh"
-              className="btn btn-outline-success"
+              className="btn btn-outline-success mr-2"
               onClick={() => this.loadItems()}
             >
               Refresh Data
