@@ -1,6 +1,5 @@
 from pathlib import Path
 from dotenv import load_dotenv
-import mysql.connector
 import os
 from wand.image import Image
 import PyPDF2

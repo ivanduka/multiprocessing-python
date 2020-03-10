@@ -94,7 +94,7 @@ app.route("/api/get").post(get);
 app.route("/api/create").post(create);
 app.route("/api/delete").post(del);
 
-const index = async (req, res) => {
+const getIndex = async (req, res) => {
     const folders = glob.sync("./html/*").map(folderPath => {
         const arr = folderPath.split("/");
         return parseInt(arr[arr.length - 1]);
@@ -117,7 +117,7 @@ const index = async (req, res) => {
     }));
     items.sort((a, b) => a.count - b.count);
 
-    res.render("index", {pageTitle: "Index of PDF files", items});
+    res.json({ items });
 };
 
 const getValidation = async (req, res) => {
@@ -149,7 +149,10 @@ const validation = async (req, res) => {
     res.sendFile("/public/validation/validation.html", {root: __dirname});
 };
 
-app.get("/", index);
+app.get("/", (req, res) =>
+  res.sendFile("/public/index/index.html", { root: __dirname })
+);
+app.get("/api/getIndex", getIndex);
 app.get("/api/getValidation", getValidation);
 app.post("/api/setValidation", setValidation);
 app.get("/validation", validation);

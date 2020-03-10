@@ -1,13 +1,31 @@
 -- All PDFs
 select * from extraction_app.x_pdfs;
+select COUNT(*) from extraction_app.x_pdfs WHERE pagesWithWordTable IS NULL;
+select COUNT(*) from extraction_app.x_pdfs WHERE totalPages IS NULL;
+
+SELECT 
+(SELECT COUNT(*) FROM extraction_app.x_pdfs) AS total,
+(SELECT COUNT(*) FROM extraction_app.x_pdfs WHERE extractedImages IS NULL) AS not_processed,
+(SELECT COUNT(*) FROM extraction_app.x_pdfs WHERE extractedImages IS NOT NULL) AS processed
+FROM DUAL;
 
 -- Count of PDFs
 select count(*) from extraction_app.x_pdfs;
+
+-- Count of pages
+SELECT SUM(totalPages) FROM x_pdfs;
+SELECT SUM(totalPagesWithWordTable) FROM x_pdfs;
 
 -- PDFs that are not in the list but referenced in CSVs
 select distinct(t1.fileId)
 from x_csvs t1
 left join x_pdfs t2 on t2.fileId = t1.fileId
+where t2.fileId is null;
+
+-- PDFs that are in the list but have no referenced CSVs
+select COUNT(t1.fileId)
+from x_pdfs t1
+left join x_csvs t2 on t2.fileId = t1.fileId
 where t2.fileId is null;
 
 -- All CSVs

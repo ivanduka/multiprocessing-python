@@ -112,7 +112,7 @@ def inject_apps():
 def inject_app(input_file):
     with input_file.open(encoding="UTF-8") as html_file:
         soup = BeautifulSoup(html_file, "html.parser")
-        app_path = "/app.jsx"  # path
+        app_path = "/application/app.jsx"
         if not soup.findAll('script', src=app_path):
             print(f"Adding scripts and CSS to {html_file}")
 
@@ -136,7 +136,7 @@ def inject_app(input_file):
             soup.body.append(script)
 
             link = soup.new_tag("link")
-            link['href'] = "/app.css"  # path
+            link['href'] = "/application/app.css"
             link['rel'] = 'stylesheet'
             link['type'] = "text/css"
             soup.body.append(link)
@@ -267,11 +267,11 @@ def clean_all_folders():
 
 
 if __name__ == "__main__":
-    clean_all_folders()
+    # clean_all_folders()
     # change_pdf_titles()
     # convert_pdfs()
     # inject_apps()
 
-    # populate_coordinates()
-    # extract_tables()
-    # extract_images()
+    populate_coordinates()
+    extract_tables()
+    extract_images()
