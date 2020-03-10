@@ -18,7 +18,7 @@ user = os.getenv("DB_USER")
 password = os.getenv("DB_PASS")
 engine = create_engine(f"mysql+mysqldb://{user}:{password}@{host}/{database}?charset=utf8")
 
-converter_path = Path(r"./buildvu-html-trial.jar")
+converter_path = Path(r"./pdf2html.jar")
 html_folder_path = Path(r"\\luxor\data\branch\Environmental Baseline Data\Web\html")
 csv_tables_folder_path = Path(r"\\luxor\data\branch\Environmental Baseline Data\Version 4 - Final\CSV")
 pdf_images_folder_path = Path(r"\\luxor\data\branch\Environmental Baseline Data\Web\pdf_images")

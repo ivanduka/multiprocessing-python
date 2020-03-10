@@ -11,7 +11,7 @@ import os
 from sqlalchemy import create_engine
 from wand.image import Image
 
-converter_path = Path(r"./buildvu-html-trial.jar")
+converter_path = Path(r"./pdf2html.jar")
 dot_env_path = Path(r"./server/.env")
 
 pdf_files_folder = Path(r"./pdf")

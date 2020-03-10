@@ -8,13 +8,6 @@ const glob = require("glob");
 
 const app = express();
 
-app.use("/", express.static(path.join(__dirname, "/html")));
-app.use("/", express.static(path.join(__dirname, "/public")));
-app.use("/jpg_tables", express.static(path.join(__dirname, "/jpg_tables")));
-app.use("/html_tables", express.static(path.join(__dirname, "/html_tables")));
-
-app.use(bodyParser.json());
-app.use(cors());
 
 const db = async q => {
     const config = {
@@ -58,9 +51,7 @@ const create = async (req, res) => {
     } = req.body;
     const query = {
         query:
-            "INSERT INTO pdf_tables" +
-            "(uuid, fileId, page, pageWidth, pageHeight, x1, y1, x2, y2, tableTitle, continuationOf)" +
-            "VALUES (?,?,?,?,?,?,?,?,?,?,?);",
+            "INSERT INTO pdf_tables (uuid, fileId, page, pageWidth, pageHeight, x1, y1, x2, y2, tableTitle, continuationOf) VALUES (?,?,?,?,?,?,?,?,?,?,?);",
         params: [
             uuid,
             fileId,
@@ -88,9 +79,6 @@ const del = async (req, res) => {
     res.json(result);
 };
 
-app.route("/api/get").post(get);
-app.route("/api/create").post(create);
-app.route("/api/delete").post(del);
 
 const getIndex = async (req, res) => {
     const folders = glob.sync("./html/*").map(folderPath => {
@@ -115,7 +103,7 @@ const getIndex = async (req, res) => {
     }));
     items.sort((a, b) => a.count - b.count);
 
-    res.json({ items });
+    res.json({items});
 };
 
 const getValidation = async (req, res) => {
@@ -143,17 +131,23 @@ const setValidation = async (req, res) => {
     }
 };
 
-const validation = async (req, res) => {
-    res.sendFile("/public/validation/validation.html", {root: __dirname});
-};
+app.use(bodyParser.json());
+app.use(cors());
 
-app.get("/", (req, res) =>
-  res.sendFile("/public/index/index.html", { root: __dirname })
-);
+
+app.use("/", express.static(path.join(__dirname, "/html")));
+app.use("/", express.static(path.join(__dirname, "/public")));
+app.use("/jpg_tables", express.static(path.join(__dirname, "/jpg_tables")));
+app.use("/html_tables", express.static(path.join(__dirname, "/html_tables")));
+
+
+app.route("/api/get").post(get);
+app.route("/api/create").post(create);
+app.route("/api/delete").post(del);
+
 app.get("/api/getIndex", getIndex);
 app.get("/api/getValidation", getValidation);
 app.post("/api/setValidation", setValidation);
-app.get("/validation", validation);
 
 const port = 8080;
 app.listen(port, () => console.log(`Listening on port ${port}...`));

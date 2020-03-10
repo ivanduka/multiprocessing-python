@@ -140,7 +140,7 @@ class Index extends React.Component {
         this.loadSearchAndTotalPages();
 
         document.addEventListener("keydown", event => {
-            if (event.altKey && event.code === "KeyS") {
+            if (event.shiftKey && (event.key === "KeyS" || event.key.toLowerCase() === "s"))  {
                 this.handleSave();
                 event.preventDefault();
             }
@@ -310,7 +310,7 @@ class Index extends React.Component {
                     <p>Coordinates: <strong>{coordinates}</strong></p>
                     {x1 ? <p>Page Width x Height: <strong>{pageWidth}x{pageHeight}</strong></p> : null}
                     {prevPageTables.length > 0 ? continuationOfSelect : null}
-                    <button onClick={() => this.handleSave()}>SAVE (ALT+S)</button>
+                    <button onClick={() => this.handleSave()}>SAVE (SHIFT+S)</button>
                     <button onClick={() => this.navigateToTables(false)}>Previous "table" (ArrowUp)</button>
                     <button onClick={() => this.navigateToTables(true)}>Next "table" (ArrowDown)</button>
                 </div>
