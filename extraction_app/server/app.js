@@ -13,8 +13,6 @@ app.use("/", express.static(path.join(__dirname, "/public")));
 app.use("/jpg_tables", express.static(path.join(__dirname, "/jpg_tables")));
 app.use("/html_tables", express.static(path.join(__dirname, "/html_tables")));
 
-app.set("view engine", "ejs");
-app.set("views", "views");
 app.use(bodyParser.json());
 app.use(cors());
 
