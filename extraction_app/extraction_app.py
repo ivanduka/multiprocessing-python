@@ -58,7 +58,6 @@ def change_pdf_title(pdf_file_path):
             reader = PyPDF2.PdfFileReader(file_in)
             metadata = reader.getDocumentInfo()
             if metadata["/Title"] != pdf_file_path.stem:
-                print("Changing file:", pdf_file_path.stem)
                 writer = PyPDF2.PdfFileWriter()
                 writer.appendPagesFromReader(reader)
                 writer.addMetadata(metadata)
@@ -67,6 +66,7 @@ def change_pdf_title(pdf_file_path):
                 })
                 with pdf_file_path.open('ab') as file_out:
                     writer.write(file_out)
+                print("Changed file:", pdf_file_path.stem)
             else:
                 print("Title is already OK for", pdf_file_path.stem)
     except Exception as e:
@@ -92,12 +92,12 @@ def convert_pdf(pdf_file_path):
 
     try:
         run(arguments, timeout=timeout)
+        print(f"Converted ID {pdf_file_path.stem}")
     except (TimeoutExpired, CalledProcessError) as e:
         print(f"==== Error converting ID {pdf_file_path.stem} to HTML ======")
         print(e)
         print(f"======================================")
         return
-    print(f"Converted ID {pdf_file_path.stem}")
 
 
 def inject_apps():
@@ -114,8 +114,6 @@ def inject_app(input_file):
         soup = BeautifulSoup(html_file, "html.parser")
         app_path = "/application/app.jsx"
         if not soup.findAll('script', src=app_path):
-            print(f"Adding scripts and CSS to {html_file}")
-
             div = soup.new_tag("div")
             div["id"] = "root"
             soup.find('div', id="idrviewer").insert_before(div)
@@ -149,6 +147,7 @@ def inject_app(input_file):
 
             with input_file.open("w", encoding='utf-8') as file:
                 file.write(str(soup))
+            print(f"Added scripts and CSS to {html_file}")
         else:
             print(f"{input_file} is all good!")
 
@@ -178,12 +177,11 @@ def populate_coordinate(table):
         query = f"UPDATE extraction_app.pdf_tables SET pdfWidth={pdf_width}, pdfHeight={pdf_height}, pdfX1={x1}," \
                 f" pdfX2={x2}, pdfY1={y1}, pdfY2={y2} WHERE (uuid='{table.uuid}');"
         connection.execute(query)
+        print(f"Populated coordinates for table ID {table.uuid}")
     except Exception as e:
         print(f"==== Error for ID {table.uuid}  ======")
         print(e)
         print(f"======================================")
-        return
-    print(f"Populated coordinates for table ID {table.uuid}")
 
 
 def extract_tables():
@@ -250,12 +248,12 @@ def extract_image(table):
             img.crop(left=left, top=top, right=right, bottom=bottom)
             img.format = "jpg"
             img.save(filename=jpg_tables_folder_path.joinpath(f"{table.uuid}.jpg"))
+            print(f"Extracted table ID {table.uuid} to image")
     except Exception as e:
         print(f"==== Error extracting table ID {table.uuid}  ======")
         print(e)
         print(f"======================================")
         return
-    print(f"Extracted table ID {table.uuid} to image")
 
 
 def clean_all_folders():
@@ -267,11 +265,11 @@ def clean_all_folders():
 
 
 if __name__ == "__main__":
-    # clean_all_folders()
-    # change_pdf_titles()
-    # convert_pdfs()
-    # inject_apps()
+    clean_all_folders()
+    change_pdf_titles()
+    convert_pdfs()
+    inject_apps()
 
-    populate_coordinates()
-    extract_tables()
-    extract_images()
+    # populate_coordinates()
+    # extract_tables()
+    # extract_images()
