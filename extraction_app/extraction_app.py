@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 import os
 from sqlalchemy import create_engine
 from wand.image import Image
+import platform
 
 converter_path = Path(r"./pdf2html.jar")
 dot_env_path = Path(r"./server/.env")
@@ -89,6 +90,8 @@ def convert_pdf(pdf_file_path):
     timeout = 3600  # seconds
     arguments = ['java', "-Xmx10000M", "-d64", '-jar', str(converter_path.resolve()), str(pdf_file_path.resolve()),
                  str(html_folder_path.resolve())]
+    if platform.system() == "Darwin":
+        del arguments[2]
 
     try:
         run(arguments, timeout=timeout)
