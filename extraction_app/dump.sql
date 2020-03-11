@@ -91,7 +91,6 @@ CREATE TABLE `x_pdfs`
     `pagesWithWordTable`      json        DEFAULT NULL,
     `totalPagesWithWordTable` int         DEFAULT NULL,
     `extractedImages`         int         DEFAULT NULL,
-    `x_pdfscol`               varchar(45) DEFAULT NULL,
     PRIMARY KEY (`fileId`),
     UNIQUE KEY `fileId_UNIQUE` (`fileId`)
 ) ENGINE = InnoDB

@@ -8,7 +8,6 @@ const glob = require("glob");
 
 const app = express();
 
-
 const db = async q => {
     const config = {
         host: process.env.DB_HOST,
@@ -79,7 +78,6 @@ const del = async (req, res) => {
     res.json(result);
 };
 
-
 const getIndex = async (req, res) => {
     const folders = glob.sync("./html/*").map(folderPath => {
         const arr = folderPath.split("/");
@@ -131,21 +129,74 @@ const setValidation = async (req, res) => {
     }
 };
 
+const allXValidationPDFsQuery = `SELECT c.project,
+                                        c.fileId,
+                                        COUNT(*)                            AS total_tables,
+                                        COUNT(IF(result IS NULL, 1, NULL))  AS not_processed,
+                                        COUNT(IF(result = 'pass', 1, NULL)) AS passed,
+                                        COUNT(IF(result = 'fail', 1, NULL)) AS failed
+                                 FROM x_csvs c
+                                 GROUP BY c.fileId`;
+
+// x_validation
+const x_indexValidation = async (req, res) => {
+    try {
+        const result = await db({query: allXValidationPDFsQuery});
+        res.json(result);
+    } catch (e) {
+        console.log(e);
+    }
+};
+
+const x_getPageValidation = async (req, res) => {
+    const {fileId} = req.body;
+    const allTablesQuery = `SELECT * FROM x_csvs WHERE fileId = ${fileId};`;
+    const pdfInfoQuery = `SELECT * FROM x_pdfs WHERE fileId = ${fileId};`;
+
+    try {
+        const allTables = db({query: allTablesQuery});
+        const pdfInfo = db({query: pdfInfoQuery});
+        const [tables, pdf] = await Promise.all([allTables, pdfInfo]);
+        res.json({pdf: pdf.results, tables: tables.results});
+    } catch (e) {
+        console.log(e);
+    }
+};
+
+const x_setCSVValidation = async (req, res) => {
+    const {csvName, result} = req.body;
+    const query = `UPDATE x_csvs SET result = '${result}' WHERE csvName = '${csvName}';`;
+
+    try {
+        await db({query});
+        res.sendStatus(200);
+    } catch (e) {
+        console.log(e);
+    }
+};
+
 app.use(bodyParser.json());
 app.use(cors());
-
 
 app.use("/", express.static(path.join(__dirname, "/html")));
 app.use("/", express.static(path.join(__dirname, "/public")));
 app.use("/jpg_tables", express.static(path.join(__dirname, "/jpg_tables")));
 app.use("/html_tables", express.static(path.join(__dirname, "/html_tables")));
 
+// x_validation
+app.get("/api/x/getAll", x_indexValidation);
+app.post("/api/x/getValidation", x_getPageValidation);
+app.post("/api/x/setValidation", x_setCSVValidation);
 
-app.route("/api/get").post(get);
-app.route("/api/create").post(create);
-app.route("/api/delete").post(del);
+// Application
+app.get("/api/get", get);
+app.post("/api/create", create);
+app.post("/api/delete", del);
 
+// Main app
 app.get("/api/getIndex", getIndex);
+
+// Validation
 app.get("/api/getValidation", getValidation);
 app.post("/api/setValidation", setValidation);
 
