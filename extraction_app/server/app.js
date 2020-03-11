@@ -6,6 +6,11 @@ const cors = require("cors");
 const path = require("path");
 const glob = require("glob");
 
+const imagesPath =
+    "\\\\luxor\\data\\branch\\Environmental Baseline Data\\Web\\pdf_images";
+const htmlTablesPath =
+    "\\\\luxor\\data\\branch\\Environmental Baseline Data\\Web\\html_tables";
+
 const app = express();
 
 const db = async q => {
@@ -149,7 +154,10 @@ const x_indexValidation = async (req, res) => {
     try {
         const allXValidationPDFs = db({query: allXValidationPDFsQuery});
         const extraPDFs = db({query: extraPDFsQuery});
-        const [pdfs, extraneousPDFs] = await Promise.all([allXValidationPDFs, extraPDFs]);
+        const [pdfs, extraneousPDFs] = await Promise.all([
+            allXValidationPDFs,
+            extraPDFs
+        ]);
         res.json({extraneousPDFs: extraneousPDFs.results, pdfs: pdfs.results});
 
         const {results} = await db({query: allXValidationPDFsQuery});
@@ -198,6 +206,8 @@ app.use("/html_tables", express.static(path.join(__dirname, "/html_tables")));
 app.get("/api/x/getAll", x_indexValidation);
 app.post("/api/x/getValidation", x_getPageValidation);
 app.post("/api/x/setValidation", x_setCSVValidation);
+app.use("/pdf_images", express.static(imagesPath));
+app.use("/x_html_images", express.static(imagesPath));
 
 // Application
 app.post("/api/get", get);
