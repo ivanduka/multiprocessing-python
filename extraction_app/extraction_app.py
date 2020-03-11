@@ -268,11 +268,11 @@ def clean_all_folders():
 
 
 if __name__ == "__main__":
-    clean_all_folders()
-    change_pdf_titles()
-    convert_pdfs()
-    inject_apps()
+    # clean_all_folders()
+    # change_pdf_titles()
+    # convert_pdfs()
+    # inject_apps()
 
-    # populate_coordinates()
-    # extract_tables()
-    # extract_images()
+    populate_coordinates()
+    extract_tables()
+    extract_images()

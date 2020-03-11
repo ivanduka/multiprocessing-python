@@ -136,13 +136,24 @@ const allXValidationPDFsQuery = `SELECT c.project,
                                         COUNT(IF(result = 'pass', 1, NULL)) AS passed,
                                         COUNT(IF(result = 'fail', 1, NULL)) AS failed
                                  FROM x_csvs c
-                                 GROUP BY c.fileId`;
+                                 GROUP BY c.fileId
+                                 ORDER BY c.project, c.fileId;`;
 
 // x_validation
 const x_indexValidation = async (req, res) => {
+    const extraPDFsQuery = `SELECT DISTINCT(t1.fileId)
+                            FROM x_csvs t1
+                                     LEFT JOIN x_pdfs t2 ON t2.fileId = t1.fileId
+                            WHERE t2.fileId IS NULL;`;
+
     try {
-        const result = await db({query: allXValidationPDFsQuery});
-        res.json(result);
+        const allXValidationPDFs = db({query: allXValidationPDFsQuery});
+        const extraPDFs = db({query: extraPDFsQuery});
+        const [pdfs, extraneousPDFs] = await Promise.all([allXValidationPDFs, extraPDFs]);
+        res.json({extraneousPDFs: extraneousPDFs.results, pdfs: pdfs.results});
+
+        const {results} = await db({query: allXValidationPDFsQuery});
+        res.json(results);
     } catch (e) {
         console.log(e);
     }
@@ -189,7 +200,7 @@ app.post("/api/x/getValidation", x_getPageValidation);
 app.post("/api/x/setValidation", x_setCSVValidation);
 
 // Application
-app.get("/api/get", get);
+app.post("/api/get", get);
 app.post("/api/create", create);
 app.post("/api/delete", del);
 
