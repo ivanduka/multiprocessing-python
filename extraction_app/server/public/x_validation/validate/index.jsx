@@ -11,17 +11,19 @@ class Index extends React.Component {
       tables: null,
       pagesWithWordTable: null,
       totalPages: null,
-      loading: true
+      loading: true,
+      currentPage: 1
     };
   }
 
   componentDidMount() {
-    const fileId = parseInt(
-      new URL(window.location.href).searchParams.get("fileId")
-    );
+    const params = new URL(window.location.href).searchParams;
+    const fileId = parseInt(params.get("fileId"));
+    const currentPage = parseInt(params.get("currentPage"));
     document.title = fileId;
-    this.setState(() => ({ fileId }));
-    this.loadItems(fileId);
+
+    this.setState(() => ({ fileId, currentPage: currentPage || 1 }));
+    this.loadItems(fileId, currentPage);
 
     document.addEventListener(
       "visibilitychange",
@@ -34,8 +36,15 @@ class Index extends React.Component {
     );
   }
 
-  async loadItems(fileId) {
+  async loadItems(fileId, currentPage) {
     try {
+      if (!fileId) {
+        fileId = this.state.fileId;
+      }
+      if (!currentPage) {
+        currentPage = this.state.currentPage;
+      }
+
       this.setState({ loading: true });
 
       const pdfInfoRes = await fetch("/api/x/getValidation", {
@@ -51,15 +60,43 @@ class Index extends React.Component {
       const { pagesWithWordTable, totalPages } = pdf.pdf[0];
       const { tables } = pdf;
 
-      this.setState({
+      this.setState(() => ({
         pagesWithWordTable: JSON.parse(pagesWithWordTable),
         totalPages,
         tables,
         loading: false
-      });
+      }));
+      this.updateAddressBar(fileId, currentPage);
     } catch (error) {
       console.log(error);
     }
+  }
+
+  updateAddressBar(fileId, currentPage) {
+    history.replaceState(
+      null,
+      null,
+      `/x_validation/validate?fileId=${fileId}&currentPage=${currentPage}`
+    );
+  }
+
+  getTablesForCurrentPage(page) {}
+
+  nextPrevPage(forward) {
+    const { totalPages, currentPage, fileId } = this.state;
+    if (
+      (forward && currentPage >= totalPages) ||
+      (!forward && currentPage <= 1)
+    ) {
+      return;
+    }
+    const newPage = forward ? currentPage + 1 : currentPage - 1;
+    this.setState(() => ({ currentPage: newPage }));
+    this.updateAddressBar(fileId, newPage);
+  }
+
+  nextPrevTable(forward) {
+    console.log(forward ? "next table" : "prev table");
   }
 
   render() {
@@ -68,10 +105,56 @@ class Index extends React.Component {
       tables,
       pagesWithWordTable,
       totalPages,
-      loading
+      loading,
+      currentPage
     } = this.state;
 
-    const main = <div>Hello World!</div>;
+    const main = (
+      <div className="container-fluid">
+        <div className="row">
+          <div className="col">
+            <strong>File ID: </strong> {fileId}; <strong>Page: </strong>
+            {currentPage}/{totalPages}
+          </div>
+        </div>
+        <div className="row">
+          <div className="col d-flex justify-content-center">
+            <button
+              type="button"
+              className="btn btn-outline-success m-3 "
+              onClick={() => this.nextPrevTable(false)}
+            >
+              Previous "table" (UP)
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline-success m-3 "
+              onClick={() => this.nextPrevPage(false)}
+            >
+              Previous page (LEFT)
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline-success m-3 "
+              onClick={() => this.nextPrevPage(true)}
+            >
+              Next page (RIGHT)
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline-success m-3 "
+              onClick={() => this.nextPrevTable(true)}
+            >
+              Next "table" (DOWN)
+            </button>
+          </div>
+        </div>
+        <div className="row">
+          <div className="col">{null}</div>
+          <div className="col">{null}</div>
+        </div>
+      </div>
+    );
 
     return loading ? loader : main;
   }
