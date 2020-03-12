@@ -9,7 +9,7 @@ const glob = require("glob");
 const imagesPath =
     "\\\\luxor\\data\\branch\\Environmental Baseline Data\\Web\\pdf_images";
 const htmlTablesPath =
-    "\\\\luxor\\data\\branch\\Environmental Baseline Data\\Web\\html_tables";
+    "\\\\luxor\\data\\branch\\Environmental Baseline Data\\Web\\x_html_tables";
 
 const app = express();
 
@@ -207,7 +207,7 @@ app.get("/api/x/getAll", x_indexValidation);
 app.post("/api/x/getValidation", x_getPageValidation);
 app.post("/api/x/setValidation", x_setCSVValidation);
 app.use("/pdf_images", express.static(imagesPath));
-app.use("/x_html_images", express.static(imagesPath));
+app.use("/x_html_tables", express.static(htmlTablesPath));
 
 // Application
 app.post("/api/get", get);
