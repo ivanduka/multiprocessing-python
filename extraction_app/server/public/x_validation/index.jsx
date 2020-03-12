@@ -1,12 +1,15 @@
 const React = window.React;
 const ReactDOM = window.ReactDOM;
 
+const loader = <div class="lds-dual-ring"></div>;
+
 class Index extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       pdfs: [],
-      extraPdfs: []
+      extraPdfs: [],
+      loading: true
     };
   }
 
@@ -21,11 +24,12 @@ class Index extends React.Component {
   }
 
   loadItems() {
+    this.setState({ loading: true });
     fetch(`/api/x/getAll`)
       .then(res => res.json())
       .then(({ extraneousPDFs, pdfs }) => {
         const extraPdfs = extraneousPDFs.map(x => x.fileId);
-        this.setState({ extraPdfs, pdfs });
+        this.setState({ extraPdfs, pdfs, loading: false });
       });
   }
 
@@ -36,7 +40,7 @@ class Index extends React.Component {
   }
 
   render() {
-    const { pdfs, extraPdfs } = this.state;
+    const { pdfs, extraPdfs, loading } = this.state;
 
     const isExtra = id =>
       extraPdfs.includes(id) ? (
@@ -66,6 +70,25 @@ class Index extends React.Component {
       )
     );
 
+    const table = (
+      <table className="table table-striped table-bordered  table-dark">
+        <thead className="thead-dark">
+          <tr>
+            <th scope="col">Project</th>
+            <th scope="col">PDF ID</th>
+            <th scope="col">Total CSVs</th>
+            <th scope="col">Passed</th>
+            <th scope="col">Failed</th>
+            <th scope="col">Not yet processed</th>
+            <th scope="col">Passed/Total</th>
+          </tr>
+        </thead>
+        <tbody>{rows}</tbody>
+      </table>
+    );
+
+    const data = loading ? loader : table;
+
     return (
       <div className="container">
         <div className="row">
@@ -80,22 +103,7 @@ class Index extends React.Component {
           </div>
         </div>
         <div className="row">
-          <div className="col m-2">
-            <table className="table table-striped table-bordered">
-              <thead className="thead-dark">
-                <tr>
-                  <th scope="col">Project</th>
-                  <th scope="col">PDF ID</th>
-                  <th scope="col">Total CSVs</th>
-                  <th scope="col">Passed</th>
-                  <th scope="col">Failed</th>
-                  <th scope="col">Not yet processed</th>
-                  <th scope="col">Passed/Total</th>
-                </tr>
-              </thead>
-              <tbody>{rows}</tbody>
-            </table>
-          </div>
+          <div className="col m-2">{data}</div>
         </div>
       </div>
     );
