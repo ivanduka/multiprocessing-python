@@ -24,3 +24,8 @@
     transform: rotate(360deg);
   }
 }
+
+.image-border {
+  border: 1px solid black;
+  margin: 10px;
+}

@@ -66,18 +66,9 @@ class Index extends React.Component {
         tables,
         loading: false
       }));
-      this.updateAddressBar(fileId, currentPage);
     } catch (error) {
       console.log(error);
     }
-  }
-
-  updateAddressBar(fileId, currentPage) {
-    history.replaceState(
-      null,
-      null,
-      `/x_validation/validate?fileId=${fileId}&currentPage=${currentPage}`
-    );
   }
 
   getTablesForCurrentPage(page) {}
@@ -92,7 +83,6 @@ class Index extends React.Component {
     }
     const newPage = forward ? currentPage + 1 : currentPage - 1;
     this.setState(() => ({ currentPage: newPage }));
-    this.updateAddressBar(fileId, newPage);
   }
 
   nextPrevTable(forward) {
@@ -108,6 +98,11 @@ class Index extends React.Component {
       loading,
       currentPage
     } = this.state;
+
+    // const inlineTable =
+    //   html_table !== "" ? (
+    //     <div dangerouslySetInnerHTML={{ __html: html_table }} />
+    //   ) : null;
 
     const main = (
       <div className="container-fluid">
@@ -150,7 +145,9 @@ class Index extends React.Component {
           </div>
         </div>
         <div className="row">
-          <div className="col">{null}</div>
+          <div className="col image-border">
+            <img src={`/pdf_images/${fileId}/${currentPage}.jpg`} className="img-fluid" />
+          </div>
           <div className="col">{null}</div>
         </div>
       </div>
