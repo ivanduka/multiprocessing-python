@@ -71,20 +71,24 @@ class Index extends React.Component {
     );
 
     const table = (
-      <table className="table table-striped table-bordered  table-dark">
-        <thead className="thead-dark">
-          <tr>
-            <th scope="col">Project</th>
-            <th scope="col">PDF ID</th>
-            <th scope="col">Total CSVs</th>
-            <th scope="col">Passed</th>
-            <th scope="col">Failed</th>
-            <th scope="col">Not yet processed</th>
-            <th scope="col">Passed/Total</th>
-          </tr>
-        </thead>
-        <tbody>{rows}</tbody>
-      </table>
+      <div className="row">
+        <div className="col m-2">
+          <table className="table table-striped table-bordered  table-dark">
+            <thead className="thead-dark">
+              <tr>
+                <th scope="col">Project</th>
+                <th scope="col">PDF ID</th>
+                <th scope="col">Total CSVs</th>
+                <th scope="col">Passed</th>
+                <th scope="col">Failed</th>
+                <th scope="col">Not yet processed</th>
+                <th scope="col">Passed/Total</th>
+              </tr>
+            </thead>
+            <tbody>{rows}</tbody>
+          </table>
+        </div>
+      </div>
     );
 
     const data = loading ? loader : table;
@@ -102,9 +106,7 @@ class Index extends React.Component {
             </button>
           </div>
         </div>
-        <div className="row">
-          <div className="col m-2">{data}</div>
-        </div>
+        {data}
       </div>
     );
   }
