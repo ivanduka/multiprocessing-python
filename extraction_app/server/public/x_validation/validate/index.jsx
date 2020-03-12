@@ -1,12 +1,17 @@
 const React = window.React;
 const ReactDOM = window.ReactDOM;
 
+const loader = <div class="lds-dual-ring"></div>;
+
 class Index extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       fileId: null,
-      tables: []
+      tables: null,
+      pagesWithWordTable: null,
+      totalPages: null,
+      loading: true
     };
   }
 
@@ -20,13 +25,19 @@ class Index extends React.Component {
 
     document.addEventListener(
       "visibilitychange",
-      () => this.handleVisibilityChange(),
+      () => {
+        if (!document.hidden) {
+          this.loadItems();
+        }
+      },
       false
     );
   }
 
   async loadItems(fileId) {
     try {
+      this.setState({ loading: true });
+
       const pdfInfoRes = await fetch("/api/x/getValidation", {
         method: "POST",
         headers: {
@@ -38,26 +49,31 @@ class Index extends React.Component {
       const pdf = await pdfInfoRes.json();
 
       const { pagesWithWordTable, totalPages } = pdf.pdf[0];
-      const tables = pdf.tables;
+      const { tables } = pdf;
 
       this.setState({
         pagesWithWordTable: JSON.parse(pagesWithWordTable),
         totalPages,
-        tables
+        tables,
+        loading: false
       });
     } catch (error) {
       console.log(error);
     }
   }
 
-  handleVisibilityChange() {
-    if (!document.hidden) {
-      this.loadItems();
-    }
-  }
-
   render() {
-    return <div>Hello World!</div>;
+    const {
+      fileId,
+      tables,
+      pagesWithWordTable,
+      totalPages,
+      loading
+    } = this.state;
+
+    const main = <div>Hello World!</div>;
+
+    return loading ? loader : main;
   }
 }
 
