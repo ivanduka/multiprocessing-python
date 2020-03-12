@@ -9,6 +9,7 @@ from subprocess import run
 import json
 from sqlalchemy import text, create_engine
 import pandas as pd
+from glob import glob
 
 dot_env_path = Path(r"./server/.env")
 load_dotenv(dotenv_path=dot_env_path)
@@ -22,9 +23,7 @@ converter_path = Path(r"./pdf2html.jar")
 html_folder_path = Path(r"\\luxor\data\branch\Environmental Baseline Data\Web\html")
 csv_tables_folder_path = Path(r"\\luxor\data\branch\Environmental Baseline Data\Version 4 - Final\CSV")
 pdf_images_folder_path = Path(r"\\luxor\data\branch\Environmental Baseline Data\Web\pdf_images")
-indices = Path(
-    r"\\luxor\data\branch\Environmental Baseline Data\Version 4 - Final\Indices\Index 2 - PDFs for Major Projects "
-    r"with ESAs.csv")
+html_tables_folder_path = Path(r"\\luxor\data\branch\Environmental Baseline Data\Web\x_html_tables")
 pdf_files_folder = Path(r"\\luxor\data\branch\Environmental Baseline Data\Web\PDF")
 pdf_files = list(pdf_files_folder.glob("*.pdf"))[:]
 
@@ -273,9 +272,35 @@ def get_words_table_from_pdf(pdf):
         print("#####################################")
 
 
+def extract_html_tables():
+    print()
+    csv_files = list(csv_tables_folder_path.glob("**/*.csv"))
+    print(f"Starting to convert {len(csv_files)} CSVs to HTML...")
+
+    # for csv_file in csv_files:
+    #     extract_html_table(csv_file)
+
+    with Pool(12) as pool:
+        pool.map(extract_html_table, csv_files)
+
+    print(f"Done converting {len(csv_files)} CSVs")
+
+
+def extract_html_table(csv):
+    try:
+        html_table_path = html_tables_folder_path.joinpath(f"{csv.stem}.html")
+        df = pd.read_csv(csv, na_filter=False, skip_blank_lines=False, header=None, )
+        df.to_html(html_table_path, index=False, header=False, encoding="utf-8-sig", na_rep=" ")
+    except Exception as e:
+        print("#####################################")
+        print(e)
+        print("#####################################")
+
+
 if __name__ == "__main__":
-    get_pdfs()
-    get_csvs()
-    get_pages_numbers()
-    extract_images_from_pdfs()
-    get_words_table_from_pdfs()
+    # get_pdfs()
+    # get_csvs()
+    # get_pages_numbers()
+    # extract_images_from_pdfs()
+    # get_words_table_from_pdfs()
+    extract_html_tables()
