@@ -24,3 +24,12 @@
     transform: rotate(360deg);
   }
 }
+
+body {
+  overflow-wrap: break-word;
+}
+
+.sticky {
+  position: sticky;
+  top: 20px;
+}
