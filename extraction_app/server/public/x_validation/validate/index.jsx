@@ -99,7 +99,7 @@ class Index extends React.Component {
   getTablesForCurrentPage() {
     const { tables, currentPage, loading } = this.state;
     if (loading) {
-      return;
+      return [];
     }
     const t = tables
       .filter(table => table.page === currentPage)
@@ -117,16 +117,14 @@ class Index extends React.Component {
       currentPage
     } = this.state;
 
-    this.getTablesForCurrentPage();
-
-    // const tablesList = this.getTablesForCurrentPage().map(({ tableName }) => (
-    //   <div></div>
-    // ));
-
-    // const inlineTable =
-    //   html_table !== "" ? (
-    //     <div dangerouslySetInnerHTML={{ __html: html_table }} />
-    //   ) : null;
+    const tablesList = this.getTablesForCurrentPage().map(
+      ({ tableName, html_table_text }) => (
+        <div className="mt-3">
+          <div>{tableName || "[NO TABLE NAME]"}</div>
+          <div dangerouslySetInnerHTML={{ __html: html_table_text }} />
+        </div>
+      )
+    );
 
     const main = (
       <div className="container-fluid">
@@ -171,13 +169,13 @@ class Index extends React.Component {
           </div>
         </div>
         <div className="row">
-          <div className="col image-border">
+          <div className="col-6">
             <img
               src={`/pdf_images/${fileId}/${currentPage}.jpg`}
               className="img-fluid"
             />
           </div>
-          <div className="col">{null}</div>
+          <div className="col-6">{tablesList}</div>
         </div>
       </div>
     );
