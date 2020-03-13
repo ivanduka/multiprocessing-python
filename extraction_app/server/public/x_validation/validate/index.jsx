@@ -119,7 +119,7 @@ class Index extends React.Component {
 
     const tablesList = this.getTablesForCurrentPage().map(
       ({ tableName, html_table_text }) => (
-        <div className="mt-3">
+        <div className="mb-5">
           <div>{tableName || "[NO TABLE NAME]"}</div>
           <div dangerouslySetInnerHTML={{ __html: html_table_text }} />
         </div>
@@ -172,10 +172,10 @@ class Index extends React.Component {
           <div className="col-6">
             <img
               src={`/pdf_images/${fileId}/${currentPage}.jpg`}
-              className="img-fluid"
+              className="img-fluid border border-dark"
             />
           </div>
-          <div className="col-6">{tablesList}</div>
+          <div className="col-6 border border-dark">{tablesList}</div>
         </div>
       </div>
     );
