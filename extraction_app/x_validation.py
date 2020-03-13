@@ -116,7 +116,7 @@ def get_csv(project):
             table_name = strings_list[1] if len(strings_list) > 3 else ""
             inserts.append(
                 {"project_name": project_name, "csv_name": csv_name, "file_id": file_id, "table_name": table_name,
-                 "page_number": page_number, "table_number": table_number, "html_name": uuid.uuid4()})
+                 "page_number": page_number, "table_number": table_number, "html_name": str(uuid.uuid4())})
 
         with engine.connect() as conn:
             stmt = text("INSERT INTO x_csvs (project, csvName, fileId, tableName, page, tableNumber, html_name)" +

@@ -140,3 +140,7 @@ report.json
 /extraction_app/server/jpg_tables/**/*
 /extraction_app/server/csv_tables/**/*
 /extraction_app/pdf/**/*
+extraction_app/server/y_temp_html
+extraction_app/server/y_page_images
+extraction_app/server/y_html_tables
+extraction_app/server/y_csv_tables
