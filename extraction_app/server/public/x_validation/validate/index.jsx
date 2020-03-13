@@ -8,11 +8,12 @@ class Index extends React.Component {
     super(props);
     this.state = {
       fileId: null,
-      tables: null,
+      tables: [],
       pagesWithWordTable: null,
       totalPages: null,
       loading: true,
-      currentPage: 1
+      currentPage: 1,
+      tablesContent: null
     };
   }
 
@@ -60,6 +61,12 @@ class Index extends React.Component {
       const { pagesWithWordTable, totalPages } = pdf.pdf[0];
       const { tables } = pdf;
 
+      for (const table of tables) {
+        const res = await fetch(`/x_html_tables/${table.html_name}.html`);
+        const html_table_text = await res.text();
+        table.html_table_text = html_table_text;
+      }
+
       this.setState(() => ({
         pagesWithWordTable: JSON.parse(pagesWithWordTable),
         totalPages,
@@ -89,6 +96,17 @@ class Index extends React.Component {
     console.log(forward ? "next table" : "prev table");
   }
 
+  getTablesForCurrentPage() {
+    const { tables, currentPage, loading } = this.state;
+    if (loading) {
+      return;
+    }
+    const t = tables
+      .filter(table => table.page === currentPage)
+      .sort((a, b) => a.tableNumber - b.tableNumber);
+    return t;
+  }
+
   render() {
     const {
       fileId,
@@ -99,6 +117,12 @@ class Index extends React.Component {
       currentPage
     } = this.state;
 
+    this.getTablesForCurrentPage();
+
+    // const tablesList = this.getTablesForCurrentPage().map(({ tableName }) => (
+    //   <div></div>
+    // ));
+
     // const inlineTable =
     //   html_table !== "" ? (
     //     <div dangerouslySetInnerHTML={{ __html: html_table }} />
@@ -108,7 +132,9 @@ class Index extends React.Component {
       <div className="container-fluid">
         <div className="row">
           <div className="col">
-            <strong>File ID: </strong> {fileId}; <strong>Page: </strong>
+            <strong>File ID: </strong> {fileId};{" "}
+            <strong>CSVs Extracted:</strong> {tables.length};{" "}
+            <strong>Page: </strong>
             {currentPage}/{totalPages}
           </div>
         </div>
@@ -146,7 +172,10 @@ class Index extends React.Component {
         </div>
         <div className="row">
           <div className="col image-border">
-            <img src={`/pdf_images/${fileId}/${currentPage}.jpg`} className="img-fluid" />
+            <img
+              src={`/pdf_images/${fileId}/${currentPage}.jpg`}
+              className="img-fluid"
+            />
           </div>
           <div className="col">{null}</div>
         </div>

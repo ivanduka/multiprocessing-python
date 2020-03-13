@@ -9,7 +9,7 @@ from subprocess import run
 import json
 from sqlalchemy import text, create_engine
 import pandas as pd
-from glob import glob
+import uuid
 
 dot_env_path = Path(r"./server/.env")
 load_dotenv(dotenv_path=dot_env_path)
@@ -116,11 +116,12 @@ def get_csv(project):
             table_name = strings_list[1] if len(strings_list) > 3 else ""
             inserts.append(
                 {"project_name": project_name, "csv_name": csv_name, "file_id": file_id, "table_name": table_name,
-                 "page_number": page_number, "table_number": table_number})
+                 "page_number": page_number, "table_number": table_number, "html_name": uuid.uuid4()})
 
         with engine.connect() as conn:
-            stmt = text("INSERT INTO x_csvs (project, csvName, fileId, tableName, page, tableNumber)" +
-                        " VALUES (:project_name, :csv_name, :file_id, :table_name, :page_number, :table_number)")
+            stmt = text("INSERT INTO x_csvs (project, csvName, fileId, tableName, page, tableNumber, html_name)" +
+                        "VALUES (:project_name, :csv_name, :file_id, :table_name, :page_number, :table_number, "
+                        ":html_name)")
             row_count = conn.execute(stmt, inserts).rowcount
         print(f"Inserted {row_count} rows for project {project_name}")
 
@@ -274,22 +275,27 @@ def get_words_table_from_pdf(pdf):
 
 def extract_html_tables():
     print()
-    csv_files = list(csv_tables_folder_path.glob("**/*.csv"))
-    print(f"Starting to convert {len(csv_files)} CSVs to HTML...")
+    df = get_table("x_csvs")
+    csvs = df.to_dict("records")
+    print(f"Starting to convert {len(csvs)} CSVs to HTML...")
 
-    # for csv_file in csv_files:
-    #     extract_html_table(csv_file)
+    for csv_object in csvs:
+        extract_html_table(csv_object)
 
-    with Pool(12) as pool:
-        pool.map(extract_html_table, csv_files)
+    # with Pool(12) as pool:
+    #     pool.map(extract_html_table, csvs)
 
-    print(f"Done converting {len(csv_files)} CSVs")
+    print(f"Done converting {len(csvs)} CSVs")
 
 
 def extract_html_table(csv):
     try:
-        html_table_path = html_tables_folder_path.joinpath(f"{csv.stem}.html")
-        df = pd.read_csv(csv, na_filter=False, skip_blank_lines=False, header=None, )
+        csv_name = csv["csvName"]
+        project = csv["project"]
+        html_name = csv["html_name"]
+        csv_file_path = csv_tables_folder_path.joinpath(project).joinpath(f"{csv_name}.csv")
+        html_table_path = html_tables_folder_path.joinpath(f"{html_name}.html")
+        df = pd.read_csv(csv_file_path, na_filter=False, skip_blank_lines=False, header=None, )
         df.to_html(html_table_path, index=False, header=False, encoding="utf-8-sig", na_rep=" ")
     except Exception as e:
         print("#####################################")
