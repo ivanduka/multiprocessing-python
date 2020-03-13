@@ -159,9 +159,6 @@ const x_indexValidation = async (req, res) => {
             extraPDFs
         ]);
         res.json({extraneousPDFs: extraneousPDFs.results, pdfs: pdfs.results});
-
-        const {results} = await db({query: allXValidationPDFsQuery});
-        res.json(results);
     } catch (e) {
         console.log(e);
     }
@@ -194,6 +191,19 @@ const x_setCSVValidation = async (req, res) => {
     }
 };
 
+// Y Validation
+const y_indexValidation = async (req, res) => {
+    const pdfQuery = `SELECT * FROM y_pdfs ORDER BY fileId;`;
+    const tablesQuery = `SELECT * FROM y_tables ORDER BY fileId , page , method , 'order';`;
+
+    try {
+        const {results} = await db({query: pdfQuery});
+        res.json(results);
+    } catch (e) {
+        console.log(e);
+    }
+};
+
 app.use(bodyParser.json());
 app.use(cors());
 
@@ -208,6 +218,9 @@ app.post("/api/x/getValidation", x_getPageValidation);
 app.post("/api/x/setValidation", x_setCSVValidation);
 app.use("/pdf_images", express.static(imagesPath));
 app.use("/x_html_tables", express.static(htmlTablesPath));
+
+// y_validation
+app.get("/api/y/getAll", y_indexValidation);
 
 // Application
 app.post("/api/get", get);
