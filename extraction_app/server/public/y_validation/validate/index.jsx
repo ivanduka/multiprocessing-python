@@ -20,21 +20,10 @@ class Index extends React.Component {
   componentDidMount() {
     const params = new URL(window.location.href).searchParams;
     const fileId = parseInt(params.get("fileId"));
-    const currentPage = parseInt(params.get("currentPage"));
     document.title = fileId;
 
-    this.setState(() => ({ fileId, currentPage: currentPage || 1 }));
-    this.loadItems(fileId, currentPage);
-
-    document.addEventListener(
-      "visibilitychange",
-      () => {
-        if (!document.hidden) {
-          this.loadItems();
-        }
-      },
-      false
-    );
+    this.setState(() => ({ fileId }));
+    this.loadItems(fileId);
   }
 
   async loadItems(fileId, currentPage) {
@@ -48,7 +37,7 @@ class Index extends React.Component {
 
       this.setState({ loading: true });
 
-      const pdfInfoRes = await fetch("/api/x/getValidation", {
+      const pdfInfoRes = await fetch("/api/y/getItem", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -56,15 +45,19 @@ class Index extends React.Component {
         body: JSON.stringify({ fileId })
       });
 
-      const pdf = await pdfInfoRes.json();
+      const json = await pdfInfoRes.json();
 
-      const { pagesWithWordTable, totalPages } = pdf.pdf[0];
-      const { tables } = pdf;
+      const { tables, pdf } = json;
+      const { pagesWithWordTable, totalPages } = pdf;
 
+      const tablesPromises = [];
       for (const table of tables) {
-        const res = await fetch(`/x_html_tables/${table.html_name}.html`);
+        tablesPromises.push(fetch(`/y_html_tables/${table.uuid}.html`));
+      }
+      for (let i = 0; i<tables.length;i++) {
+        const res = await tablesPromises[i];
         const html_table_text = await res.text();
-        table.html_table_text = html_table_text;
+        tables[i].html_table_text = html_table_text;
       }
 
       this.setState(() => ({
@@ -120,7 +113,9 @@ class Index extends React.Component {
     const tablesList = this.getTablesForCurrentPage().map(
       ({ tableName, html_table_text }) => (
         <div className="mb-5">
-          <div><strong>{tableName || "[NO TABLE NAME]"}</strong></div>
+          <div>
+            <strong>{tableName || "[NO TABLE NAME]"}</strong>
+          </div>
           <div dangerouslySetInnerHTML={{ __html: html_table_text }} />
         </div>
       )

@@ -5,37 +5,16 @@ SELECT
     COUNT(*) AS total_tables,
     COUNT(IF(result IS NULL, 1, NULL)) AS not_processed,
     COUNT(IF(result = 'pass', 1, NULL)) AS passed,
-    COUNT(IF(result = 'fail', 1, NULL)) AS failed,
-    p.totalPages,
-    p.pagesWithWordTable    
+    COUNT(IF(result = 'fail', 1, NULL)) AS failed
 FROM
     x_csvs c
-        INNER JOIN
-    x_pdfs p ON p.fileId = c.fileId
-GROUP BY c.fileId;
+GROUP BY c.fileId
+ORDER BY c.project, c.fileId;
 
 -- Get one file for x_validation
-SELECT 
-    c.project,
-    c.fileId,
-    COUNT(*) AS total_tables,
-    COUNT(IF(result IS NULL, 1, NULL)) AS not_processed,
-    COUNT(IF(result = 'pass', 1, NULL)) AS passed,
-    COUNT(IF(result = 'fail', 1, NULL)) AS failed,
-    p.totalPages,
-    p.pagesWithWordTable    
-FROM
-    x_csvs c
-        INNER JOIN
-    x_pdfs p ON p.fileId = c.fileId
-WHERE c.fileId = 1059614;
-    
-SELECT 
-    COUNT(*)
-FROM
-    x_csvs
-WHERE
-    fileId = 1059614;
+SELECT * FROM x_csvs WHERE fileId = 1059614;
+SELECT COUNT(*) FROM x_csvs WHERE fileId = 1059614;
+SELECT * FROM x_pdfs WHERE fileId = 1059614;
 
 -- All PDFs
 select * from extraction_app.x_pdfs;
@@ -68,7 +47,7 @@ left join x_csvs t2 on t2.fileId = t1.fileId
 where t2.fileId is null;
 
 -- All CSVs
-select * from extraction_app.x_csvs;
+select COUNT(*) from extraction_app.x_csvs;
 
 
 
@@ -77,6 +56,8 @@ select count(*) as total, count(if(tableName = "", 1, null)) as empty_name, coun
 
 -- Number of CSV that have are 2nd+ on page
 select count(if(tableNumber > 1, 1, null)) as more_than_one_table_per_page from extraction_app.x_csvs;
+
+SELECT * FROM x_csvs WHERE tableNumber > 1;
 
 -- Clear CSVs
 -- delete from x_csvs;

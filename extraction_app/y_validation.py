@@ -22,12 +22,12 @@ password = os.getenv("DB_PASS")
 engine = create_engine(f"mysql+mysqldb://{user}:{password}@{host}/{database}?charset=utf8")
 
 converter_path = Path(r"./pdf2html.jar")
-html_folder_path = Path(r"./server/y_temp_html")
-csv_tables_folder_path = Path(r"./server/y_csv_tables")
-pdf_images_folder_path = Path(r"./server/y_page_images")
-html_tables_folder_path = Path(r"./server/y_html_tables")
-pdf_files_folder = Path(r"./pdf")
-pdf_files = list(pdf_files_folder.glob("*.pdf"))
+html_folder_path = Path(r"\\luxor\data\branch\Environmental Baseline Data\Web\html")
+csv_tables_folder_path = Path(r"\\luxor\data\branch\Environmental Baseline Data\Web\y\csv_tables")
+pdf_images_folder_path = Path(r"\\luxor\data\branch\Environmental Baseline Data\Web\pdf_images")
+html_tables_folder_path = Path(r"\\luxor\data\branch\Environmental Baseline Data\Web\y\html_tables")
+pdf_files_folder = Path(r"\\luxor\data\branch\Environmental Baseline Data\Web\PDF")
+pdf_files = list(pdf_files_folder.glob("*.pdf"))[:]
 
 
 def clean_folder(folder):
@@ -75,11 +75,11 @@ def get_pages_numbers():
     pdfs = df["fileId"]
     print(f"Starting to update {len(pdfs)} PDF pages numbers in DB...")
 
-    for pdf in pdfs:
-        get_pages_number(pdf)
+    # for pdf in pdfs:
+    #     get_pages_number(pdf)
 
-    # with Pool(12) as pool:
-    #     pool.map(get_pages_number, pdfs)
+    with Pool(12) as pool:
+        pool.map(get_pages_number, pdfs)
 
     print(f"Done {len(pdfs)} items")
 
@@ -150,13 +150,13 @@ def get_words_table_from_pdfs():
     print(f"Cleaning up the folder {html_folder_path}...")
     clean_folder(html_folder_path)
     print()
-    print(f"Starting to extract images from {len(pdfs)} PDFs in DB...")
+    print(f"Starting to extract words `table` from {len(pdfs)} PDFs in DB...")
 
-    for pdf_file in pdfs:
-        get_words_table_from_pdf(pdf_file)
+    # for pdf_file in pdfs:
+    #     get_words_table_from_pdf(pdf_file)
 
-    # with Pool(12) as pool:
-    #     pool.map(get_words_table_from_pdf, pdfs)
+    with Pool(12) as pool:
+        pool.map(get_words_table_from_pdf, pdfs)
 
     print(f"Done {len(pdfs)} items")
 
@@ -211,11 +211,11 @@ def extract_csv_tables():
     clean_folder(csv_tables_folder_path)
     print(f"Starting to convert {len(pdfs)} PDFs to CSVs...")
 
-    for pdf_object in pdfs:
-        extract_csv_table(pdf_object)
+    # for pdf_object in pdfs:
+    #    extract_csv_table(pdf_object)
 
-    # with Pool(12) as pool:
-    #     pool.map(extract_csv_table, pdfs)
+    with Pool(12) as pool:
+        pool.map(extract_csv_table, pdfs)
 
     print(f"Done converting {len(pdfs)} PDFs")
 
@@ -241,19 +241,21 @@ def extract_csv_table(pdf):
                            encoding="utf-8-sig", na_rep=" ")
                 with engine.connect() as conn:
                     statement = text(
-                        "INSERT INTO y_tables (uuid, fileId, method, page, `order`) " +
-                        "VALUE (:csv_id, :pdf_name, :method, :page, :order);")
+                        "INSERT INTO y_tables (uuid, fileId, method, page, number) " +
+                        "VALUE (:csv_id, :pdf_name, :method, :page, :number);")
                     conn.execute(statement,
-                                 {"csv_id": csv_id, "pdf_name": pdf_name, "method": method, "page": page, "order": i})
+                                 {"csv_id": csv_id, "pdf_name": pdf_name, "method": method, "page": page, "number": i})
 
         for current_page in range(1, pdf_pages):
-            stream_tables = camelot.read_pdf(str(pdf_file_path), pages=str(current_page), strip_text='\n',
-                                             flavor="stream",
-                                             flag_size=True, )
-            process_tables(stream_tables, current_page, "stream")
+            sousan_tables = camelot.read_pdf(str(pdf_file_path), pages=str(current_page), strip_text='\n',
+                                             flag_size=True, copy_text=['v'], line_scale=40, flavour="stream", )
+            process_tables(sousan_tables, current_page, "sousan")
             lattice_tables = camelot.read_pdf(str(pdf_file_path), pages=str(current_page), strip_text='\n',
-                                              flavor="lattice", flag_size=True, )
+                                              flag_size=True, flavor="lattice")
             process_tables(lattice_tables, current_page, "lattice")
+            stream_tables = camelot.read_pdf(str(pdf_file_path), pages=str(current_page), strip_text='\n',
+                                             flag_size=True, flavor="stream")
+            process_tables(stream_tables, current_page, "stream")
             print()
     except Exception as e:
         print("#####################################")
@@ -264,6 +266,6 @@ def extract_csv_table(pdf):
 if __name__ == "__main__":
     # get_pdfs()
     # get_pages_numbers()
-    # extract_images_from_pdfs()
+    # extract_images_from_pdfs() #  Do not run as it is done in X Validation
     # get_words_table_from_pdfs()
     extract_csv_tables()
