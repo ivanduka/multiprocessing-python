@@ -25,16 +25,6 @@ class Index extends React.Component {
 
     this.setState(() => ({ fileId, currentPage: currentPage || 1 }));
     this.loadItems(fileId, currentPage);
-
-    document.addEventListener(
-      "visibilitychange",
-      () => {
-        if (!document.hidden) {
-          this.loadItems();
-        }
-      },
-      false
-    );
   }
 
   async loadItems(fileId, currentPage) {

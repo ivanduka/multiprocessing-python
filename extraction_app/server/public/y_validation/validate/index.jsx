@@ -91,10 +91,6 @@ class Index extends React.Component {
     this.setState(() => ({ currentPage: newPage }));
   }
 
-  nextPrevTable(forward) {
-    console.log(forward ? "next table" : "prev table");
-  }
-
   getTablesForCurrentPage() {
     const { tables, currentPage, loading } = this.state;
     if (loading) {
@@ -114,9 +110,12 @@ class Index extends React.Component {
       ({ method, number, html_table_text }) => (
         <div className="mb-3">
           <div>
-            <strong>{`'${method}' - table ${number+1}`}</strong>
+            <strong>{`'${method}' - table ${number + 1}`}</strong>
           </div>
-          <div dangerouslySetInnerHTML={{ __html: html_table_text }} className={`${method} table-container`}/>
+          <div
+            dangerouslySetInnerHTML={{ __html: html_table_text }}
+            className={`${method} table-container`}
+          />
         </div>
       )
     );
@@ -136,13 +135,6 @@ class Index extends React.Component {
             <button
               type="button"
               className="btn btn-outline-success m-3 "
-              onClick={() => this.nextPrevTable(false)}
-            >
-              Previous "table" (UP)
-            </button>
-            <button
-              type="button"
-              className="btn btn-outline-success m-3 "
               onClick={() => this.nextPrevPage(false)}
             >
               Previous page (LEFT)
@@ -153,13 +145,6 @@ class Index extends React.Component {
               onClick={() => this.nextPrevPage(true)}
             >
               Next page (RIGHT)
-            </button>
-            <button
-              type="button"
-              className="btn btn-outline-success m-3 "
-              onClick={() => this.nextPrevTable(true)}
-            >
-              Next "table" (DOWN)
             </button>
           </div>
         </div>

@@ -38,6 +38,7 @@
   white-space: normal;
   overflow-wrap: break-word;
   table-layout: fixed;
+  width: 100%;
 }
 
 .sousan > table {

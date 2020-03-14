@@ -29,6 +29,13 @@ body {
   overflow-wrap: break-word;
 }
 
+table {
+  white-space: normal;
+  overflow-wrap: break-word;
+  table-layout: fixed;
+  width: 100%;
+}
+
 .sticky {
   position: sticky;
   top: 20px;
