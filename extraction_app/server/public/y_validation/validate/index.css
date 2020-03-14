@@ -25,10 +25,6 @@
   }
 }
 
-body {
-  overflow-wrap: break-word;
-}
-
 .sticky {
   position: sticky;
   top: 20px;
@@ -36,4 +32,22 @@ body {
 
 .table-fit {
   width: 1px;
+}
+
+.table-container > table {
+  white-space: normal;
+  overflow-wrap: break-word;
+  table-layout: fixed;
+}
+
+.sousan > table {
+  background-color: lightpink;
+}
+
+.lattice > table {
+  background-color: lightskyblue;
+}
+
+.stream > table {
+  background-color: lightgreen;
 }

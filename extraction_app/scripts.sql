@@ -49,8 +49,6 @@ where t2.fileId is null;
 -- All CSVs
 select COUNT(*) from extraction_app.x_csvs;
 
-
-
 -- Table names and CSV count
 select count(*) as total, count(if(tableName = "", 1, null)) as empty_name, count(if(tableName != "", 1, null)) as non_empty_name FROM x_csvs;
 

@@ -48,21 +48,27 @@ class Index extends React.Component {
       const json = await pdfInfoRes.json();
 
       const { tables, pdf } = json;
-      const { pagesWithWordTable, totalPages } = pdf;
+      const { pagesWithWordTable, totalPages, project } = pdf;
 
       const tablesPromises = [];
       for (const table of tables) {
         tablesPromises.push(fetch(`/y_html_tables/${table.uuid}.html`));
       }
-      for (let i = 0; i<tables.length;i++) {
+      for (let i = 0; i < tables.length; i++) {
         const res = await tablesPromises[i];
         const html_table_text = await res.text();
         tables[i].html_table_text = html_table_text;
       }
 
+      tables
+        .sort((a, b) => a.number - b.number)
+        .sort((a, b) => a.method.localeCompare(b.method))
+        .sort((a, b) => a.page - b.page);
+
       this.setState(() => ({
         pagesWithWordTable: JSON.parse(pagesWithWordTable),
         totalPages,
+        project,
         tables,
         loading: false
       }));
@@ -74,7 +80,7 @@ class Index extends React.Component {
   getTablesForCurrentPage(page) {}
 
   nextPrevPage(forward) {
-    const { totalPages, currentPage, fileId } = this.state;
+    const { totalPages, currentPage } = this.state;
     if (
       (forward && currentPage >= totalPages) ||
       (!forward && currentPage <= 1)
@@ -96,27 +102,21 @@ class Index extends React.Component {
     }
     const t = tables
       .filter(table => table.page === currentPage)
-      .sort((a, b) => a.tableNumber - b.tableNumber);
+      .sort((a, b) => a.number - b.number)
+      .sort((a, b) => a.method.localeCompare(b.method));
     return t;
   }
 
   render() {
-    const {
-      fileId,
-      tables,
-      pagesWithWordTable,
-      totalPages,
-      loading,
-      currentPage
-    } = this.state;
+    const { fileId, tables, totalPages, loading, currentPage } = this.state;
 
     const tablesList = this.getTablesForCurrentPage().map(
-      ({ tableName, html_table_text }) => (
-        <div className="mb-5">
+      ({ method, number, html_table_text }) => (
+        <div className="mb-3">
           <div>
-            <strong>{tableName || "[NO TABLE NAME]"}</strong>
+            <strong>{`'${method}' - table ${number+1}`}</strong>
           </div>
-          <div dangerouslySetInnerHTML={{ __html: html_table_text }} />
+          <div dangerouslySetInnerHTML={{ __html: html_table_text }} className={`${method} table-container`}/>
         </div>
       )
     );
@@ -167,10 +167,10 @@ class Index extends React.Component {
           <div className="col-6">
             <img
               src={`/pdf_images/${fileId}/${currentPage}.jpg`}
-              className="img-fluid border border-dark sticky"
+              className="img-fluid border border-primary sticky"
             />
           </div>
-          <div className="col-6 border border-dark">{tablesList}</div>
+          <div className="col-6 border border-primary mb-3">{tablesList}</div>
         </div>
       </div>
     );

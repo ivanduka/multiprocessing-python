@@ -10,8 +10,8 @@ const imagesPath =
   "\\\\luxor\\data\\branch\\Environmental Baseline Data\\Web\\pdf_images";
 const htmlTablesPath =
   "\\\\luxor\\data\\branch\\Environmental Baseline Data\\Web\\x_html_tables";
-const y_html_tables_path = "\\\\luxor\\data\\branch\\Environmental Baseline Data\\Web\\y\\html_tables";
-
+const y_html_tables_path =
+  "\\\\luxor\\data\\branch\\Environmental Baseline Data\\Web\\y\\html_tables";
 
 const app = express();
 
@@ -195,7 +195,7 @@ const x_setCSVValidation = async (req, res) => {
 
 // Y Validation
 const y_index = async (req, res) => {
-  const pdfQuery = `SELECT * FROM y_pdfs ORDER BY fileId;`;
+  const pdfQuery = `SELECT pd.*, pr.project as project FROM y_pdfs pd LEFT JOIN y_projects pr ON pd.fileId = pr.fileId ORDER BY pd.fileId;`;
 
   try {
     const { results } = await db({ query: pdfQuery });
@@ -208,7 +208,7 @@ const y_index = async (req, res) => {
 const y_getItem = async (req, res) => {
   const { fileId } = req.body;
   const allTablesQuery = `SELECT * FROM y_tables WHERE fileId = ${fileId};`;
-  const pdfInfoQuery = `SELECT * FROM y_pdfs WHERE fileId = ${fileId};`;
+  const pdfInfoQuery = `SELECT * FROM y_pdfs pdf LEFT JOIN y_projects proj ON proj.fileId = pdf.fileId WHERE pdf.fileId = ${fileId};`;
 
   try {
     const allTables = db({ query: allTablesQuery });
