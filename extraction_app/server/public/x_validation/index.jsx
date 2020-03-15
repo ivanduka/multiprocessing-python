@@ -15,12 +15,6 @@ class Index extends React.Component {
 
   componentDidMount() {
     this.loadItems();
-
-    document.addEventListener(
-      "visibilitychange",
-      () => this.handleVisibilityChange(),
-      false
-    );
   }
 
   loadItems() {

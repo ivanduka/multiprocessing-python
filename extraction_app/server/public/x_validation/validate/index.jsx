@@ -13,7 +13,8 @@ class Index extends React.Component {
       totalPages: null,
       loading: true,
       currentPage: 1,
-      tablesContent: null
+      tablesContent: null,
+      imageLoaded: false
     };
   }
 
@@ -68,6 +69,10 @@ class Index extends React.Component {
     }
   }
 
+  imageOnLoad = () => {
+    this.setState({ imageLoaded: true });
+  };
+
   getTablesForCurrentPage(page) {}
 
   nextPrevPage(forward) {
@@ -79,7 +84,7 @@ class Index extends React.Component {
       return;
     }
     const newPage = forward ? currentPage + 1 : currentPage - 1;
-    this.setState(() => ({ currentPage: newPage }));
+    this.setState(() => ({ currentPage: newPage, imageLoaded: false }));
   }
 
   nextPrevTable(forward) {
@@ -101,7 +106,7 @@ class Index extends React.Component {
     const {
       fileId,
       tables,
-      pagesWithWordTable,
+      imageLoaded,
       totalPages,
       loading,
       currentPage
@@ -110,7 +115,9 @@ class Index extends React.Component {
     const tablesList = this.getTablesForCurrentPage().map(
       ({ tableName, html_table_text }) => (
         <div className="mb-5">
-          <div><strong>{tableName || "[NO TABLE NAME]"}</strong></div>
+          <div>
+            <strong>{tableName || "[NO TABLE NAME]"}</strong>
+          </div>
           <div dangerouslySetInnerHTML={{ __html: html_table_text }} />
         </div>
       )
@@ -128,13 +135,13 @@ class Index extends React.Component {
         </div>
         <div className="row">
           <div className="col d-flex justify-content-center">
-            <button
+            {/* <button
               type="button"
               className="btn btn-outline-success m-3 "
               onClick={() => this.nextPrevTable(false)}
             >
               Previous "table" (UP)
-            </button>
+            </button> */}
             <button
               type="button"
               className="btn btn-outline-success m-3 "
@@ -149,13 +156,13 @@ class Index extends React.Component {
             >
               Next page (RIGHT)
             </button>
-            <button
+            {/* <button
               type="button"
               className="btn btn-outline-success m-3 "
               onClick={() => this.nextPrevTable(true)}
             >
               Next "table" (DOWN)
-            </button>
+            </button> */}
           </div>
         </div>
         <div className="row">
@@ -163,6 +170,8 @@ class Index extends React.Component {
             <img
               src={`/pdf_images/${fileId}/${currentPage}.jpg`}
               className="img-fluid border border-dark sticky"
+              style={imageLoaded ? {} : { visibility: "hidden" }}
+              onLoad={this.imageOnLoad}
             />
           </div>
           <div className="col-6 border border-dark">{tablesList}</div>

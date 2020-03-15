@@ -13,9 +13,14 @@ class Index extends React.Component {
       totalPages: null,
       loading: true,
       currentPage: 1,
-      tablesContent: null
+      tablesContent: null,
+      imageLoaded: false
     };
   }
+
+  imageOnLoad = () => {
+    this.setState({ imageLoaded: true });
+  };
 
   componentDidMount() {
     const params = new URL(window.location.href).searchParams;
@@ -88,7 +93,7 @@ class Index extends React.Component {
       return;
     }
     const newPage = forward ? currentPage + 1 : currentPage - 1;
-    this.setState(() => ({ currentPage: newPage }));
+    this.setState(() => ({ currentPage: newPage, imageLoaded: false }));
   }
 
   getTablesForCurrentPage() {
@@ -104,7 +109,7 @@ class Index extends React.Component {
   }
 
   render() {
-    const { fileId, tables, totalPages, loading, currentPage } = this.state;
+    const { fileId, tables, totalPages, loading, currentPage, imageLoaded } = this.state;
 
     const tablesList = this.getTablesForCurrentPage().map(
       ({ method, number, html_table_text }) => (
@@ -153,6 +158,8 @@ class Index extends React.Component {
             <img
               src={`/pdf_images/${fileId}/${currentPage}.jpg`}
               className="img-fluid border border-primary sticky"
+              style={imageLoaded ? {} : { visibility: "hidden" }}
+              onLoad={this.imageOnLoad}
             />
           </div>
           <div className="col-6 border border-primary mb-3">{tablesList}</div>
