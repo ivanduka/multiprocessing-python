@@ -40,3 +40,11 @@ table {
   position: sticky;
   top: 20px;
 }
+
+.pass {
+  background-color: lightgreen;
+}
+
+.fail {
+  background-color: lightcoral;
+}

@@ -14,7 +14,8 @@ class Index extends React.Component {
       loading: true,
       currentPage: 1,
       tablesContent: null,
-      imageLoaded: false
+      imageLoaded: false,
+      settingStatus: false
     };
   }
 
@@ -25,16 +26,13 @@ class Index extends React.Component {
     document.title = fileId;
 
     this.setState(() => ({ fileId, currentPage: currentPage || 1 }));
-    this.loadItems(fileId, currentPage);
+    this.loadItems(fileId);
   }
 
-  async loadItems(fileId, currentPage) {
+  async loadItems(fileId) {
     try {
       if (!fileId) {
         fileId = this.state.fileId;
-      }
-      if (!currentPage) {
-        currentPage = this.state.currentPage;
       }
 
       this.setState({ loading: true });
@@ -102,6 +100,29 @@ class Index extends React.Component {
     return t;
   }
 
+  setResult = async (result, csvName) => {
+    this.setState({ settingStatus: true });
+
+    const res = await fetch("/api/x/setValidation", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ result, csvName })
+    });
+
+    if (res.status !== 200) {
+      console.log(res);
+      return alert(status);
+    }
+
+    this.setState(({ tables }) => {
+      const table = tables.find(t => t.csvName === csvName);
+      table.result = result;
+      return { tables, settingStatus: false };
+    });
+  };
+
   render() {
     const {
       fileId,
@@ -109,14 +130,39 @@ class Index extends React.Component {
       imageLoaded,
       totalPages,
       loading,
-      currentPage
+      currentPage,
+      settingStatus
     } = this.state;
 
     const tablesList = this.getTablesForCurrentPage().map(
-      ({ tableName, html_table_text }) => (
-        <div className="mb-5">
-          <div>
-            <strong>{tableName || "[NO TABLE NAME]"}</strong>
+      ({ tableName, html_table_text, result, csvName }) => (
+        <div
+          className={"mb-5 " + result}
+          style={settingStatus ? { visibility: "hidden" } : {}}
+        >
+          <div className="mb-2">
+            <div>
+              <strong>{tableName || "[NO TABLE NAME]"}</strong>
+            </div>
+            <button
+              className="btn btn-primary m-1"
+              onClick={() => this.setResult("pass", csvName)}
+            >
+              Pass
+            </button>
+            <button
+              className="btn btn-danger m-1"
+              onClick={() => this.setResult("fail", csvName)}
+            >
+              Fail
+            </button>
+            <button
+              className="btn btn-warning m-1"
+              onClick={() => this.setResult("", csvName)}
+            >
+              Unset
+            </button>
+            Current status: {result || "not set"}
           </div>
           <div dangerouslySetInnerHTML={{ __html: html_table_text }} />
         </div>

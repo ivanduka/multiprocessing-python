@@ -12,6 +12,7 @@ import pandas as pd
 import uuid
 import platform
 import camelot
+import hashlib
 
 dot_env_path = Path(r"./server/.env")
 load_dotenv(dotenv_path=dot_env_path)
@@ -263,9 +264,159 @@ def extract_csv_table(pdf):
         print("#####################################")
 
 
+def delete_latest_tables():
+    def do_work(target):
+        statement = text("DELETE FROM y_tables WHERE fileId = :fileId AND page = :page")
+        file_id = target["fileId"]
+        page = target["page"]
+        result = conn.execute(statement, {"fileId": file_id, "page": page})
+        print(f"Deleted {result.rowcount} for {file_id} # {page}")
+
+    with engine.connect() as conn:
+        df = pd.read_sql("SELECT fileId, MAX(page) as page FROM y_tables GROUP BY fileId;", conn)
+        maxes = df.to_dict("records")
+
+        for item in maxes:
+            do_work(item)
+
+    print(f"Deleted last page tables")
+
+
+def continue_extracting_csv_tables():
+    print()
+
+    statement = "SELECT p.fileId, p.totalPages, t.page FROM y_pdfs p " + \
+                "LEFT JOIN (SELECT fileId, MAX(page) AS page FROM y_tables GROUP BY fileId) t ON p.fileId = t.fileId;"
+    pdfs = pd.read_sql(statement, engine).replace({pd.np.nan: None}).to_dict("records")
+    print(f"Continue to convert PDFs to CSVs...")
+
+    # for pdf_object in pdfs:
+    #    extract_csv_table(pdf_object)
+
+    with Pool() as pool:
+        pool.map(extract_csv_table, pdfs)
+
+    print(f"Done converting PDFs")
+
+
+def continue_extracting_csv_table(pdf):
+    try:
+        pdf_name = pdf["fileId"]
+        pdf_pages = pdf["totalPages"]
+        last_page = pdf["page"]
+        pdf_file_path = pdf_files_folder.joinpath(f"{pdf_name}.pdf")
+
+        def process_tables(tables, page, method):
+            if len(tables) == 0:
+                print(f"0 tables found with {method} for page {page} of {pdf_name}")
+                return
+            print(f"{len(tables)} tables found with {method} for page {page} of {pdf_name}")
+            for i in range(len(tables)):
+                t = tables[i]
+                csv_id = str(uuid.uuid4())
+                csv_file_name = csv_tables_folder_path.joinpath(f"{csv_id}.csv")
+                t.to_csv(csv_file_name, index=False, header=False)
+                df = pd.read_csv(csv_file_name, na_filter=False, skip_blank_lines=False, header=None, )
+                df.to_html(html_tables_folder_path.joinpath(f"{csv_id}.html"), index=False, header=False,
+                           encoding="utf-8-sig", na_rep=" ")
+                with engine.connect() as conn:
+                    statement = text(
+                        "INSERT INTO y_tables (uuid, fileId, method, page, number) " +
+                        "VALUE (:csv_id, :pdf_name, :method, :page, :number);")
+                    conn.execute(statement,
+                                 {"csv_id": csv_id, "pdf_name": pdf_name, "method": method, "page": page, "number": i})
+
+        start = last_page + 1 if last_page is not None else 1
+
+        for current_page in range(start, pdf_pages):
+            try:
+                sousan_tables = camelot.read_pdf(str(pdf_file_path), pages=str(current_page), strip_text='\n',
+                                                 flag_size=True, copy_text=['v'], line_scale=40, flavour="stream", )
+                process_tables(sousan_tables, current_page, "sousan")
+            except Exception as e:
+                print(e)
+            try:
+                lattice_tables = camelot.read_pdf(str(pdf_file_path), pages=str(current_page), strip_text='\n',
+                                                  flag_size=True, flavor="lattice")
+                process_tables(lattice_tables, current_page, "lattice")
+            except Exception as e:
+                print(e)
+            try:
+                stream_tables = camelot.read_pdf(str(pdf_file_path), pages=str(current_page), strip_text='\n',
+                                                 flag_size=True, flavor="stream")
+                process_tables(stream_tables, current_page, "stream")
+                print()
+            except Exception as e:
+                print(e)
+    except Exception as e:
+        print("#####################################")
+        print(e)
+        print("#####################################")
+
+
+def assign_hash_sum(record):
+    table_id = record["uuid"]
+    file_path = csv_tables_folder_path.joinpath(f"{table_id}.csv")
+    file_hash = hashlib.md5(file_path.read_bytes()).hexdigest()
+    with engine.connect() as conn:
+        stmt = text("UPDATE y_tables SET hash_sum = :file_hash WHERE uuid = :table_id;")
+        conn.execute(stmt, {"file_hash": file_hash, "table_id": table_id})
+        print(file_hash)
+
+
+def assign_hash_sums():
+    df = get_table("y_tables")
+    tables = df.to_dict("records")
+
+    # for table in tables:
+    #     assign_hash_sum(table)
+
+    with Pool() as pool:
+        pool.map(assign_hash_sum, tables)
+
+
+def clean_file(pdf):
+    pdf_id = pdf["fileId"]
+    pages = pdf["totalPages"]
+    query = text("DELETE FROM y_tables WHERE uuid = :uuid")
+    duplicates = 0
+    for current_page in range(1, pages):
+        with engine.connect() as conn:
+            df = pd.read_sql(text("SELECT * FROM y_tables WHERE fileId = :fileId AND page = :page;"), conn,
+                             params={"fileId": pdf_id, "page": current_page})
+            records = df.to_dict("records")
+            hash_dict = {}
+            for record in records:
+                hash_sum = record["hash_sum"]
+                table_id = record["uuid"]
+                if hash_sum in hash_dict:
+                    result = conn.execute(query, {"uuid": table_id})
+                    duplicates += result.rowcount
+                else:
+                    hash_dict[hash_sum] = True
+    print(f"Done cleaning up file {pdf_id}, deleted {duplicates} duplicates")
+
+
+def cleanup_duplicates():
+    with engine.connect() as conn:
+        df = pd.read_sql("SELECT fileId, totalPages FROM y_pdfs;", conn)
+    pdfs = df.to_dict("records")
+
+    # for file in pdfs:
+    #     clean_file(file)
+        
+    with Pool() as pool:
+        pool.map(clean_file, pdfs)
+
+
 if __name__ == "__main__":
     # get_pdfs()
     # get_pages_numbers()
     # extract_images_from_pdfs() #  Do not run as it is done in X Validation
     # get_words_table_from_pdfs()
-    extract_csv_tables()
+    # extract_csv_tables()
+    # delete_latest_tables()  # BE CAREFUL!!!
+    # continue_extracting_csv_tables()
+    # assign_hash_sums()
+    cleanup_duplicates()
+    pass

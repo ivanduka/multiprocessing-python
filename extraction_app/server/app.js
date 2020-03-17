@@ -183,13 +183,16 @@ const x_getPageValidation = async (req, res) => {
 
 const x_setCSVValidation = async (req, res) => {
   const { csvName, result } = req.body;
-  const query = `UPDATE x_csvs SET result = '${result}' WHERE csvName = '${csvName}';`;
+  const query = `UPDATE x_csvs SET result = ${
+    result ? `'${result}'` : "NULL"
+  } WHERE csvName = '${csvName}';`;
 
   try {
     await db({ query });
     res.sendStatus(200);
   } catch (e) {
     console.log(e);
+    res.sendStatus(500);
   }
 };
 
