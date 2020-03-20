@@ -205,21 +205,21 @@ def extract_table(table):
         pdf_file_path = pdf_files_folder.joinpath(f"{table.fileId}.pdf")
         table_areas = [f"{table.pdfX1},{table.pdfY1},{table.pdfX2},{table.pdfY2}"]
         tables = camelot.read_pdf(str(pdf_file_path), table_areas=table_areas, pages=str(table.page),
-                                  strip_text='\n', flavor="stream", flag_size=True, )
-        print(f"found {len(tables)} tables with stream")
+                                  strip_text='\n', line_scale=40, flag_size=True)
+        print(f"found {len(tables)} tables with lattice")
         if len(tables) == 0:
             tables = camelot.read_pdf(str(pdf_file_path), table_areas=table_areas, pages=str(table.page),
-                                      strip_text='\n', flavor="lattice")
-            print(f"found {len(tables)} tables with lattice")
+                                      strip_text='\n', flavor="stream", flag_size=True, )
+            print(f"found {len(tables)} tables with stream")
         if len(tables) > 0:
             csv_file_name = csv_tables_folder_path.joinpath(f"{table.uuid}.csv")
             tables[0].to_csv(csv_file_name, index=False, header=False)
             df = pd.read_csv(csv_file_name, na_filter=False, skip_blank_lines=False, header=None, )
             df.to_html(html_tables_folder_path.joinpath(f"{table.uuid}.html"), index=False, header=False,
                        encoding="utf-8-sig", na_rep=" ")
-            # fig = camelot.plot(tables[0], kind='contour')
-            # fig.suptitle(table.uuid)
-            # plt.show()
+            fig = camelot.plot(tables[0], kind='contour')
+            fig.suptitle(table.uuid)
+            plt.show()
         else:
             print(f">>>> No tables found for table ID {table.uuid}")
     except Exception as e:
@@ -273,6 +273,6 @@ if __name__ == "__main__":
     # convert_pdfs()
     # inject_apps()
 
-    populate_coordinates()
+    # populate_coordinates()
     extract_tables()
-    extract_images()
+    # extract_images()

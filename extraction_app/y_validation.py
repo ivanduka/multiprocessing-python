@@ -404,7 +404,7 @@ def cleanup_duplicates():
 
     # for file in pdfs:
     #     clean_file(file)
-        
+
     with Pool() as pool:
         pool.map(clean_file, pdfs)
 

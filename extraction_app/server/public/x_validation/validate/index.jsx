@@ -23,7 +23,7 @@ class Index extends React.Component {
     const params = new URL(window.location.href).searchParams;
     const fileId = parseInt(params.get("fileId"));
     const currentPage = parseInt(params.get("currentPage"));
-    document.title = fileId;
+    document.title = "X: " + fileId;
 
     this.setState(() => ({ fileId, currentPage: currentPage || 1 }));
     this.loadItems(fileId);
